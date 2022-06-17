@@ -75,7 +75,29 @@ def lighten_color(color_code, proportion=0.5):
 
 def darken_color(color_code, proportion=0.5):
     return mix_colors(color_code, "#000000", proportion)
+
+def get_time_and_savgol(data_dict,
+                        y_key,
+                        savgol_time_window = 0.1,
+                        poly_order = 1,
+                        time_offset_index_range = [0,10],
+                        time_to_seconds_factor = 1e-6,
+                        data_dict_time_key = "TIME",
+                        ):
+    savgol_dict = {}
+    time_s_dict = {}
+    key_list = list(data_dict.keys())
+    time_offset = np.min([data_dict[i][data_dict_time_key][
+        time_offset_index_range[0]:time_offset_index_range[1]
+        ] for i in data_dict.keys()])
+    for i in range(len(key_list)):
+        ch_id = key_list[i]
+        x_data = (data_dict[ch_id][data_dict_time_key]-time_offset)*time_to_seconds_factor
+        time_s_dict[ch_id] = x_data
+        y_data = savgol_smooth_time(data_dict[ch_id][y_key], x_data, savgol_time_window, poly_order)
+        savgol_dict[ch_id] = y_data
     
+    return savgol_dict, time_s_dict
     
 def paired_time_series_fft_plot(data_dict, y_key="temp_C", 
                                 use_time_offset=True, identifier=None, 
@@ -124,15 +146,11 @@ def paired_time_series_fft_plot(data_dict, y_key="temp_C",
                 )
         
         
-        
-    savgol_dict = {}
-    time_s_dict = {}
+    savgol_dict, time_s_dict = get_time_and_savgol(data_dict, y_key)
     for i in range(len(key_list)):
         ch_id = key_list[i]
-        x_data = (data_dict[ch_id]["TIME"]-time_offset)*1e-6
-        time_s_dict[ch_id] = x_data
-        y_data = savgol_smooth_time(data_dict[ch_id][y_key], data_dict[ch_id]["TIME"], 1e5, 1)
-        savgol_dict[ch_id] = y_data
+        x_data = time_s_dict[ch_id]
+        y_data = savgol_dict[ch_id]
         axes[0].plot(x_data,
                      y_data,
                      lw = 1, ls="-", color=darken_color(COLOR_CYCLE[i%len(COLOR_CYCLE)]),
@@ -155,13 +173,13 @@ def paired_time_series_fft_plot(data_dict, y_key="temp_C",
     fig.suptitle(suptitle_string)
     fig.set_size_inches(np.asarray([1920,1080])/fig.dpi)
     
-    return fig, axes
+    return fig, axes, savgol_dict, time_s_dict
 
 
 # %%
 if __name__ == "__main__":
     data_file_path = (
-        "/home/stellarremnants/Grad_School/muDAQ/"
+        "/home/stellarremnants/muDAQ/"
         "analysis_code/thermistor_data/thermistor_test_0008.csv"
         )
     data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
@@ -169,11 +187,38 @@ if __name__ == "__main__":
     file_name = data_file_path.split(os.path.sep)[-1]
     
     identifier = f"\"{file_name}\"\n{start_datetime.ctime()} UTC"
-    y_key = "temp_C"
+    y_key = "resistance"
     
-    fig, axes = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
+    fig, axes, savgol_dict, time_s_dict = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
     
 # %%
+    key_list = list(data_dict.keys())
+    fig, axes = plt.subplots(nrows=len(key_list), sharex=True, sharey=True)
+    
+    frequency_label = "Frequency [Hz]"
+    time_label = "Time [s]"
+    if y_key == "temp_C":
+        fft_ylabel = r"Temperature PSD [$^\circ$C$^2$/Hz]"
+    elif y_key == "voltage":
+        fft_ylabel = r"Voltage PSD [V$^2$/Hz]"
+    elif y_key == "ADC":
+        fft_ylabel = r"ADC PSD [ADC$^2$/Hz]"
+    elif y_key == "resistance":
+        fft_ylabel = r"Resistance PSD [$\Omega$$^2$/Hz]"
+    else:
+        fft_ylabel = r"Unknown PSD [?/Hz]"
+            
+    for i in range(len(key_list)):
+        ch_id = key_list[i]
+        spectrum, freqs, t, im = axes[i].specgram(
+            x = data_dict[ch_id][y_key],
+            # x = savgol_dict[ch_id],
+            Fs = 1/(np.mean(np.diff(time_s_dict[ch_id])))
+            )
+        cb = fig.colorbar(im, ax=axes[i])    
+        axes[i].set_ylabel(frequency_label)
+        cb.set_label(fft_ylabel)
+    axes[-1].set_xlabel(time_label)
 # %%
     # fig, axes = plt.subplots(nrows=len(key_list), sharex = True, sharey = False)
     
