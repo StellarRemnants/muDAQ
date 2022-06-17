@@ -1,0 +1,38 @@
+{
+  "program_name": "Thermistor_Test",
+  "delay_on_empty": 0.01,
+  "device_list": [
+    {
+      "port": "/dev/ttyUSB0",
+      "device_name": "Arduino Artemis ATP - Flow Sensors",
+      "data_file_prefix": "../../analysis_code/thermistor_data/thermistor_test",
+      "baudrate": 230400,
+      "ignore_first_lines": 10,
+      "check_port_exists": false,
+      "collection_mode": "duration",
+      "collection_duration": 20,
+      "collection_count": null,
+      "delay_on_empty": 0.01,
+      "max_voltage": 2,
+      "bit_resolution": 14,
+      "channel_list": [
+        {
+          "channel_name": "Short Leads",
+          "pin_id": 29,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3
+        },
+        {
+          "channel_name": "Long Leads",
+          "pin_id": 11,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3
+        }
+      ]
+    }
+  ]
+}

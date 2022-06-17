@@ -1,0 +1,15 @@
+UTC datetime,Wed Jun 15 21:11:40 2022
+UTC timestamp,1655352700.56122
+port,/dev/ttyUSB0
+device_name,Arduino Artemis ATP - Flow Sensors
+data_file_prefix,data/test_file
+baudrate,230400
+ignore_first_lines,10
+check_port_exists,False
+collection_mode,duration
+collection_duration,10
+collection_count,None
+delay_on_empty,0.01
+max_voltage,2
+bit_resolution,14
+channel_list,,
