@@ -141,8 +141,8 @@ def collect_for_duration_from_file(json_file_path, verbose=True):
             rl = dev.readline()
             if len(rl):
                 if verbose:
-                    print(f"Line: {rl}")
-                pass
+                    # print(f"Line: {rl}")
+                    pass
         time.sleep(1)
         
         if verbose:
@@ -185,5 +185,14 @@ def collect_for_duration_from_file(json_file_path, verbose=True):
 # %%
 
 if __name__ == "__main__":
-    json_file = "New_Thermistors_2022-06-16.json"
+    import sys
+    if len(sys.argv) >= 2:
+        json_file = sys.argv[1]
+    else:
+        json_file = "New_Thermistors_2022-06-16.json"
+    
+    print("========================================================")
+    print("Using file: ")
+    print(f"\t\"{json_file}\"")
+    print("========================================================")
     collect_for_duration_from_file(json_file)

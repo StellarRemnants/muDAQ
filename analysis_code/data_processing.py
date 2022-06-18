@@ -180,7 +180,7 @@ def paired_time_series_fft_plot(data_dict, y_key="temp_C",
 if __name__ == "__main__":
     data_file_path = (
         "/home/stellarremnants/muDAQ/"
-        "analysis_code/thermistor_data/thermistor_test_0008.csv"
+        "analysis_code/thermistor_data/thermistor_test_0020.csv"
         )
     data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
     
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     y_key = "resistance"
     
     fig, axes, savgol_dict, time_s_dict = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
-    
+    plt.close(fig)
 # %%
     key_list = list(data_dict.keys())
     fig, axes = plt.subplots(nrows=len(key_list), sharex=True, sharey=True)
@@ -219,6 +219,9 @@ if __name__ == "__main__":
         axes[i].set_ylabel(frequency_label)
         cb.set_label(fft_ylabel)
     axes[-1].set_xlabel(time_label)
+    plt.close(fig)
+# %%
+    print([[np.mean(data_dict[ch_id]["resistance"]), np.mean(data_dict[ch_id]["temp_C"])] for ch_id in key_list])
 # %%
     # fig, axes = plt.subplots(nrows=len(key_list), sharex = True, sharey = False)
     
