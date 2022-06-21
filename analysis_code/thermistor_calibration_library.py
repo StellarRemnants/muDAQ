@@ -168,16 +168,28 @@ def print_sensor_id_compatible_dict(dataframe_dict, sensor_id_dict,
 
 # %%
 if __name__ == "__main__":
+    # test_file_dict = {
+    #     41.3 : ["./thermistor_data/thermistor_test_0016.csv"],
+    #     43.0 : ["./thermistor_data/thermistor_test_0013.csv"],
+    #     47.6 : ["./thermistor_data/thermistor_test_0015.csv"],
+    #     51.0 : ["./thermistor_data/thermistor_test_0014.csv"],
+    #     53.3 : ["./thermistor_data/thermistor_test_0017.csv"],
+    #     56.9 : ["./thermistor_data/thermistor_test_0012.csv"],
+    #     62.3 : ["./thermistor_data/thermistor_test_0018.csv"],
+    #     67.6 : ["./thermistor_data/thermistor_test_0020.csv"],
+    #     70.5 : ["./thermistor_data/thermistor_test_0019.csv"],
+    #     }
+    
     test_file_dict = {
-        41.3 : ["./thermistor_data/thermistor_test_0016.csv"],
-        43.0 : ["./thermistor_data/thermistor_test_0013.csv"],
-        47.6 : ["./thermistor_data/thermistor_test_0015.csv"],
-        51.0 : ["./thermistor_data/thermistor_test_0014.csv"],
-        53.3 : ["./thermistor_data/thermistor_test_0017.csv"],
-        56.9 : ["./thermistor_data/thermistor_test_0012.csv"],
-        62.3 : ["./thermistor_data/thermistor_test_0018.csv"],
-        67.6 : ["./thermistor_data/thermistor_test_0020.csv"],
-        70.5 : ["./thermistor_data/thermistor_test_0019.csv"],
+        23.9 : ["./thermistor_data/thermistor_02_test_0000.csv"],
+        29.3 : ["./thermistor_data/thermistor_02_test_0001.csv"],
+        36.4 : ["./thermistor_data/thermistor_02_test_0002.csv"],
+        41.0 : ["./thermistor_data/thermistor_02_test_0003.csv"],
+        46.1 : ["./thermistor_data/thermistor_02_test_0004.csv"],
+        51.5 : ["./thermistor_data/thermistor_02_test_0005.csv"],
+        56.5 : ["./thermistor_data/thermistor_02_test_0006.csv"],
+        61.3 : ["./thermistor_data/thermistor_02_test_0007.csv"],
+        63.9 : ["./thermistor_data/thermistor_02_test_0008.csv"],
         }
     
     ret_dict, device_dict = load_data_means(test_file_dict)

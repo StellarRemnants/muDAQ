@@ -178,10 +178,10 @@ def paired_time_series_fft_plot(data_dict, y_key="temp_C",
 
 # %%
 if __name__ == "__main__":
-    for i in range(10, 21):
+    for i in range(0, 9):
         data_file_path = (
             "/home/stellarremnants/muDAQ/"
-            f"analysis_code/thermistor_data/thermistor_test_{i:04d}.csv"
+            f"analysis_code/thermistor_data/thermistor_02_test_{i:04d}.csv"
             )
         data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
         
