@@ -22,6 +22,14 @@ def ln_fit_variable(R, *args):
 MIN_LN = 0
 MAX_LN = 7
 
+def ln_fit_fnc(xdata, ydata, max_pow=None, p0=None):
+    if max_pow is None and p0 is None:
+        return ValueError("Must specify one of max_pow or p0")
+    elif p0 is None:
+        p0 = [1] * (max_pow+1)
+
+    return curve_fit(ln_fit_variable, xdata, ydata, p0=p0)
+
 def ln_fit_fnc_multi(max_pow=3):
     if max_pow > MAX_LN or max_pow < MIN_LN:
         raise ValueError(f"max_pow value {max_pow} is out of allowed range [{MIN_LN}, {MAX_LN}]")

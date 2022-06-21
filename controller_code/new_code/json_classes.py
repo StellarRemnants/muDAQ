@@ -58,12 +58,13 @@ class channel_settings:
             "channel_name",
             "pin_id",
             "pin_delay",
-            "sensor_type",
-            "ref_resistance",
-            "ref_voltage",
             ]
         
         optional_keys = [
+            "sensor_type",
+            "ref_resistance",
+            "ref_voltage",
+            "sensor_id",
             ]
         for key in indict.keys():
             if not (key in required_keys) and not (key in optional_keys):
@@ -107,6 +108,7 @@ class channel_settings:
             sensor_type = "thermistor",
             ref_resistance = 10000,
             ref_voltage = 3.3,
+            sensor_id = "Unknown",
             ):
         self.channel_name = self.validate_name(channel_name)
         self.pin_id = pin_id
@@ -114,7 +116,7 @@ class channel_settings:
         self.sensor_type = sensor_type
         self.ref_resistance = ref_resistance
         self.ref_voltage = ref_voltage
-        
+        self.sensor_id = sensor_id
     
     def validate_name(
             self,

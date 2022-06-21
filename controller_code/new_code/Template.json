@@ -22,7 +22,8 @@
           "pin_delay": 500,
           "sensor_type": "thermistor",
           "ref_resistance": 10000,
-          "ref_voltage": 3.3
+          "ref_voltage": 3.3,
+          "sensor_id": "Unknown"
         },
         {
           "channel_name": "CH1",
@@ -30,7 +31,8 @@
           "pin_delay": 500,
           "sensor_type": "thermistor",
           "ref_resistance": 10000,
-          "ref_voltage": 3.3
+          "ref_voltage": 3.3,
+          "sensor_id": "Unknown"
         },
         {
           "channel_name": "CH2",
@@ -38,7 +40,8 @@
           "pin_delay": 500,
           "sensor_type": "thermistor",
           "ref_resistance": 10000,
-          "ref_voltage": 3.3
+          "ref_voltage": 3.3,
+          "sensor_id": "Unknown"
         }
       ]
     }

@@ -11,7 +11,8 @@ import numpy as np
 import json
 import datetime
 
-from thermistor_calibration import ln_fit_fnc_multi
+from thermistor_calibration import (ln_fit_variable)
+from thermistor_correction_library import correct_resistance
 
 FIT_DICT = {
     0:[42.5],
@@ -82,8 +83,7 @@ def thermisor_resistance_from_voltage(voltage_array, ref_resistance, ref_voltage
     return ref_resistance * voltage_array / (ref_voltage- voltage_array)
 
 def thermistor_temp_C_from_resistance(resistance, fit_degree=6):
-    fit_fnc = ln_fit_fnc_multi(fit_degree)
-    return fit_fnc(resistance, *FIT_DICT[fit_degree])
+    return ln_fit_variable(resistance, *FIT_DICT[fit_degree])
 
 def separate_channels(dataframe):
     channel_ids = np.unique(dataframe["CH"])
@@ -116,6 +116,9 @@ def process_data_from_path(data_file_path,
                 resistance = thermisor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
                                                                channel_settings[ch_id]["ref_resistance"], 
                                                                channel_settings[ch_id]["ref_voltage"])
+                sensor_id = channel_settings[ch_id]["sensor_id"]
+                if sensor_id.lower() != "unknown":
+                    resistance = correct_resistance(resistance, sensor_id)
                 data_dict[ch_id] = data_dict[ch_id].assign(resistance=resistance).reset_index(drop=True)
                 temp_C = thermistor_temp_C_from_resistance(resistance, fit_degree=fit_degree)
                 data_dict[ch_id] = data_dict[ch_id].assign(temp_C=temp_C).reset_index(drop=True)
@@ -129,7 +132,7 @@ def process_data_from_path(data_file_path,
 
 if __name__ == "__main__":
     data_file_path = (
-        "/home/stellarremnants/Grad_School/muDAQ/"
-        "analysis_code/thermistor_data/thermistor_test_0008.csv"
+        "/home/stellarremnants/muDAQ/"
+        "analysis_code/thermistor_data/thermistor_test_0011.csv"
         )
     data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)

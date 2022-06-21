@@ -178,50 +178,51 @@ def paired_time_series_fft_plot(data_dict, y_key="temp_C",
 
 # %%
 if __name__ == "__main__":
-    data_file_path = (
-        "/home/stellarremnants/muDAQ/"
-        "analysis_code/thermistor_data/thermistor_test_0020.csv"
-        )
-    data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
-    
-    file_name = data_file_path.split(os.path.sep)[-1]
-    
-    identifier = f"\"{file_name}\"\n{start_datetime.ctime()} UTC"
-    y_key = "resistance"
-    
-    fig, axes, savgol_dict, time_s_dict = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
-    plt.close(fig)
-# %%
-    key_list = list(data_dict.keys())
-    fig, axes = plt.subplots(nrows=len(key_list), sharex=True, sharey=True)
-    
-    frequency_label = "Frequency [Hz]"
-    time_label = "Time [s]"
-    if y_key == "temp_C":
-        fft_ylabel = r"Temperature PSD [$^\circ$C$^2$/Hz]"
-    elif y_key == "voltage":
-        fft_ylabel = r"Voltage PSD [V$^2$/Hz]"
-    elif y_key == "ADC":
-        fft_ylabel = r"ADC PSD [ADC$^2$/Hz]"
-    elif y_key == "resistance":
-        fft_ylabel = r"Resistance PSD [$\Omega$$^2$/Hz]"
-    else:
-        fft_ylabel = r"Unknown PSD [?/Hz]"
-            
-    for i in range(len(key_list)):
-        ch_id = key_list[i]
-        spectrum, freqs, t, im = axes[i].specgram(
-            x = data_dict[ch_id][y_key],
-            # x = savgol_dict[ch_id],
-            Fs = 1/(np.mean(np.diff(time_s_dict[ch_id])))
+    for i in range(10, 21):
+        data_file_path = (
+            "/home/stellarremnants/muDAQ/"
+            f"analysis_code/thermistor_data/thermistor_test_{i:04d}.csv"
             )
-        cb = fig.colorbar(im, ax=axes[i])    
-        axes[i].set_ylabel(frequency_label)
-        cb.set_label(fft_ylabel)
-    axes[-1].set_xlabel(time_label)
-    plt.close(fig)
+        data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
+        
+        file_name = data_file_path.split(os.path.sep)[-1]
+        
+        identifier = f"\"{file_name}\"\n{start_datetime.ctime()} UTC"
+        y_key = "temp_C"
+        
+        fig, axes, savgol_dict, time_s_dict = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
+    # plt.close(fig)
 # %%
-    print([[np.mean(data_dict[ch_id]["resistance"]), np.mean(data_dict[ch_id]["temp_C"])] for ch_id in key_list])
+    # key_list = list(data_dict.keys())
+    # fig, axes = plt.subplots(nrows=len(key_list), sharex=True, sharey=True)
+    
+    # frequency_label = "Frequency [Hz]"
+    # time_label = "Time [s]"
+    # if y_key == "temp_C":
+    #     fft_ylabel = r"Temperature PSD [$^\circ$C$^2$/Hz]"
+    # elif y_key == "voltage":
+    #     fft_ylabel = r"Voltage PSD [V$^2$/Hz]"
+    # elif y_key == "ADC":
+    #     fft_ylabel = r"ADC PSD [ADC$^2$/Hz]"
+    # elif y_key == "resistance":
+    #     fft_ylabel = r"Resistance PSD [$\Omega$$^2$/Hz]"
+    # else:
+    #     fft_ylabel = r"Unknown PSD [?/Hz]"
+            
+    # for i in range(len(key_list)):
+    #     ch_id = key_list[i]
+    #     spectrum, freqs, t, im = axes[i].specgram(
+    #         x = data_dict[ch_id][y_key],
+    #         # x = savgol_dict[ch_id],
+    #         Fs = 1/(np.mean(np.diff(time_s_dict[ch_id])))
+    #         )
+    #     cb = fig.colorbar(im, ax=axes[i])    
+    #     axes[i].set_ylabel(frequency_label)
+    #     cb.set_label(fft_ylabel)
+    # axes[-1].set_xlabel(time_label)
+    # plt.close(fig)
+# %%
+    # print([[np.mean(data_dict[ch_id]["resistance"]), np.mean(data_dict[ch_id]["temp_C"])] for ch_id in key_list])
 # %%
     # fig, axes = plt.subplots(nrows=len(key_list), sharex = True, sharey = False)
     
