@@ -176,12 +176,24 @@ def paired_time_series_fft_plot(data_dict, y_key="temp_C",
     return fig, axes, savgol_dict, time_s_dict
 
 
+def normalize_array(in1):
+    array_min = np.min(in1)
+    t1 = in1-array_min
+    new_max = np.max(t1)
+    t2 = t1/new_max
+    
+    return t2
+
+
+
 # %%
 if __name__ == "__main__":
-    for i in range(0, 9):
+    prefix = "thermistor_02_test"
+    # prefix = "thermistor_test"
+    for i in [8]:#range(0, 9):
         data_file_path = (
             "/home/stellarremnants/muDAQ/"
-            f"analysis_code/thermistor_data/thermistor_02_test_{i:04d}.csv"
+            f"analysis_code/thermistor_data/{prefix}_{i:04d}.csv"
             )
         data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
         
@@ -192,6 +204,210 @@ if __name__ == "__main__":
         
         fig, axes, savgol_dict, time_s_dict = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
     # plt.close(fig)
+# %%
+    
+    # from scipy.optimize import minimize
+    from scipy.interpolate import interp1d
+    from scipy.signal import (correlate, correlation_lags)
+    
+    x1 = data_dict[29]["temp_C"]; t1 = data_dict[29]["TIME"]*1e-6
+    x2 = data_dict[34]["temp_C"]; t2 = data_dict[34]["TIME"]*1e-6
+    
+    dt = np.mean([np.mean(np.diff(t1)), np.mean(np.diff(t2))])
+    start=np.max([np.min(t1), np.min(t2)])
+    end=np.min([np.max(t1), np.max(t2)])
+    num_points = int(np.ceil((end-start)/dt))
+    
+    t = np.linspace(start, end, num_points)
+    # t = np.linspace(
+    #     )
+    f1 = interp1d(t1, x1, kind="cubic")
+    f2 = interp1d(t2, x2, kind="cubic")
+    
+    y1 = f1(t)
+    y2 = f2(t)
+    
+    corr = correlate(y1, y2, mode="full")
+    lags = correlation_lags(len(y1), len(y2), mode="full")
+    
+    max_cor_arg = np.argmax(corr)
+    max_cor = corr[max_cor_arg]
+    max_lag = lags[max_cor_arg]
+    
+    lag_time = max_lag * dt
+    
+# %%    
+    # from scipy.optimize import minimize
+    from scipy.interpolate import interp1d
+    from scipy.signal import (correlate, correlation_lags)
+    ch_id_1 = 29; ch_id_2 = 34
+    mode = "full"
+    x1 = data_dict[ch_id_1]["temp_C"]; t1 = data_dict[ch_id_1]["TIME"]*1e-6
+    x2 = data_dict[ch_id_2]["temp_C"]; t2 = data_dict[ch_id_2]["TIME"]*1e-6
+    
+    dt = np.mean([np.mean(np.diff(t1)), np.mean(np.diff(t2))])
+    start=np.max([np.min(t1), np.min(t2)])
+    end=np.min([np.max(t1), np.max(t2)])
+    num_points = int(np.ceil((end-start)/dt))
+    
+    t = np.linspace(start, end, num_points)
+    # t = np.linspace(
+    #     )
+    f1 = interp1d(t1, x1, kind="cubic")
+    f2 = interp1d(t2, x2, kind="cubic")
+    
+    y1 = f1(t)
+    y2 = f2(t)
+    
+    window_length_time = 2
+    window_length_index = int(np.ceil(window_length_time/dt))
+    
+    search_radius_time = 0.25
+    search_radius_index = int(np.ceil(search_radius_time/dt))
+    
+    num_windows = num_points-window_length_index
+    if num_windows <=0:
+        raise Exception("Invalid num_windows!")
+        
+    lag_times = np.zeros(num_windows)
+    window_sizes = np.zeros([num_windows, 2])
+    
+    size_1 = window_length_index
+    size_2 = (2*search_radius_index+window_length_index+1)
+    
+    time_low = -search_radius_index*dt
+    
+    corr_size = 0
+    if mode == "valid":
+        corr_size = size_2-size_1
+    elif mode == "full":
+        corr_size = size_1 + size_2 - 2
+    elif mode == "same":
+        corr_size = size_1
+    correlations = np.zeros([num_windows, corr_size])
+    corr_len = np.zeros([num_windows])
+    
+    time_high = time_low + corr_size*dt
+    
+    savgol_correlations = np.zeros_like(correlations)
+    savgol_lags = np.zeros_like(lag_times)
+    
+    for i in range(search_radius_index, num_windows-search_radius_index):
+        window_1 = np.asarray([i, i+window_length_index])
+        window_2 = np.asarray([
+            np.max([0, i-search_radius_index]),
+            np.min([num_points, i+window_length_index+search_radius_index])
+            ])
+        s1 = y1[window_1[0]:window_1[1]]
+        s2 = y2[window_2[0]:window_2[1]]
+        
+        window_sizes[i, 0] = window_1[1]-window_1[0]
+        window_sizes[i, 1] = window_2[1]-window_2[0]
+        
+        corr = correlate(s1, s2, mode=mode)
+        # lags = correlation_lags(len(s1), len(s2), mode=mode)
+        
+        norm_corr = normalize_array(corr)
+        max_cor_arg = np.argmax(norm_corr)
+        # max_cor = corr[max_cor_arg]
+        max_lag = (max_cor_arg+window_2[0]-i) * dt
+        corr_len[i] = len(norm_corr)
+        lag_time = max_lag * dt
+        lag_times[i] = lag_time
+        
+        
+        correlations[i, :] = norm_corr
+        
+        savgol_window = int(np.ceil(corr_size/5))
+        if savgol_window % 2 == 0:
+            savgol_window += 1
+        savgol_corr = savgol_filter(norm_corr, 
+                                    window_length = savgol_window,
+                                    polyorder=1)
+        norm_savgol = normalize_array(savgol_corr)
+        savgol_correlations[i, :] = norm_savgol
+        savgol_max_cor_arg = np.argmax(norm_savgol)
+        savgol_max_lag = (savgol_max_cor_arg+window_2[0]-i) * dt
+        savgol_lag_time = savgol_max_lag * dt
+        savgol_lags[i] = savgol_lag_time
+        
+        
+        
+# %%
+    fig, axes = plt.subplots(nrows=3, sharex=True)
+    
+    
+    slice_len = search_radius_index
+    # slice_len = 0
+    slice_min = slice_len
+    slice_max = -slice_len
+    if slice_max == 0:
+        slice_max = -1
+    
+    sliced_lag_times = lag_times[slice_min:slice_max]
+    sliced_savgol_lag = savgol_lags[slice_min:slice_max]
+    sliced_correlations = correlations.T[:,slice_min:slice_max]
+    sliced_savgol_correlations = savgol_correlations.T[:,slice_min:slice_max]
+    new_t = np.arange(len(sliced_lag_times)) * dt
+    
+    axes[0].plot(new_t, sliced_lag_times)
+    axes[0].plot(new_t, sliced_savgol_lag)
+    
+    extent = np.asarray([0, new_t.max(), time_low, time_high])
+    img = axes[1].imshow(sliced_correlations, 
+                   aspect="auto", interpolation="nearest",
+                   origin="lower", extent=extent,
+                   cmap="hot")
+    axes[1].plot(new_t, sliced_lag_times)
+    
+    axes[2].plot(new_t, sliced_savgol_lag)
+    axes[2].imshow(sliced_savgol_correlations, 
+                   aspect="auto", interpolation="nearest",
+                   origin="lower", extent=extent,
+                   cmap="hot")
+    
+    axes[-1].set_xlabel("Time Elapsed [s]")
+    
+    axes[1].set_ylabel("Lag Time [s]")
+    axes[0].set_ylabel("Peak Lag Time [s]")
+    cb = fig.colorbar(mappable=img, ax=axes)
+    cb.set_label("Normalized Correlation [0,1]")
+    
+# %%
+    # FIT CHECK
+    num_plots = 5
+    fig, ax = plt.subplots()
+    
+    plot_range = sliced_lag_times.size
+    index_per = int(np.floor(plot_range/num_plots))
+    slice_size = sliced_correlations.shape[0]
+    # start_index = 0
+    
+    for i in range(num_plots):
+        start_index = i*index_per
+        corr_vals = sliced_correlations[:, start_index]
+        scor_vals = sliced_savgol_correlations[:, start_index]
+        x_vals = np.arange(start_index, start_index+slice_size)
+        color = COLOR_CYCLE[i%len(COLOR_CYCLE)]
+        ax.plot(x_vals, corr_vals, color=color, lw=2)
+        
+        ax.plot(x_vals, scor_vals, 
+                color=darken_color(color, proportion=0.5),
+                lw=1)
+        
+# %%
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    x = new_t
+    y = np.linspace(time_low, time_high, corr_size, endpoint=True)
+    z = sliced_savgol_correlations
+    Z = z
+    X, Y = np.meshgrid(x, y)
+    ax.plot_surface(X, Y, Z, cmap="hot")
+    ax.set_xlabel("Time Elapsed [s]")
+    ax.set_ylabel("Time Lag [s]")
+    ax.set_zlabel("Normalized Correlation")
+    
+    
 # %%
     # key_list = list(data_dict.keys())
     # fig, axes = plt.subplots(nrows=len(key_list), sharex=True, sharey=True)
