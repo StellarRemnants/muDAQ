@@ -11,7 +11,7 @@ import numpy as np
 import json
 import datetime
 
-from thermistor_calibration import (ln_fit_variable)
+# from thermistor_calibration import (ln_fit_variable)
 from thermistor_correction_library import correct_resistance
 
 FIT_DICT = {
@@ -29,6 +29,15 @@ FIT_DICT = {
         2.21033659e-01, -1.16043492e-02,  3.55732332e-04, -4.81185545e-06],
     
     }
+
+def ln_fit_variable(R, *args):
+    log_R = np.log(R)
+    dat = np.zeros_like(log_R)
+    
+    for i in range(len(args)):
+        dat += args[i] * log_R ** i
+    return dat
+    
 
 def load_preamble(csv_file_path, read_until="`---`"):
     time_lines = []
