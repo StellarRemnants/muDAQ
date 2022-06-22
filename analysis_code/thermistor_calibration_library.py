@@ -64,7 +64,7 @@ COLOR_CYCLE = PROP_CYCLE.by_key()['color']
 def load_data_means(file_dict, 
                     resistance_key = "resistance",
                     temperature_key = "temp_C",
-                    fit_degree = 2
+                    fit_degree = 6
                     ):
     ret = {}
     file_keys = list(file_dict.keys())
@@ -98,12 +98,15 @@ def get_means_by_ch_id(means_dict,
     for ch_id in ch_ids:
         new_dict[ch_id] = []
     for Tm in means_dict.keys():
-        for ch_id in ch_ids:
+        for ch_id in means_dict[Tm].keys():
             new_dict[ch_id].append([Tm, *means_dict[Tm][ch_id]])
     for ch_id in ch_ids:
         new_dict[ch_id] = {dataframe_key: pandas.DataFrame.from_records(
             np.asarray(new_dict[ch_id]), 
-            columns=[measured_temp_key, resistance_key, temperature_key])}
+            columns=[measured_temp_key, resistance_key, temperature_key]
+            ).sort_values(["resistance"])
+            
+            }
         
     return new_dict
 
@@ -168,19 +171,19 @@ def print_sensor_id_compatible_dict(dataframe_dict, sensor_id_dict,
 
 # %%
 if __name__ == "__main__":
-    # test_file_dict = {
-    #     41.3 : ["./thermistor_data/thermistor_test_0016.csv"],
-    #     43.0 : ["./thermistor_data/thermistor_test_0013.csv"],
-    #     47.6 : ["./thermistor_data/thermistor_test_0015.csv"],
-    #     51.0 : ["./thermistor_data/thermistor_test_0014.csv"],
-    #     53.3 : ["./thermistor_data/thermistor_test_0017.csv"],
-    #     56.9 : ["./thermistor_data/thermistor_test_0012.csv"],
-    #     62.3 : ["./thermistor_data/thermistor_test_0018.csv"],
-    #     67.6 : ["./thermistor_data/thermistor_test_0020.csv"],
-    #     70.5 : ["./thermistor_data/thermistor_test_0019.csv"],
+    test_file_dict = {
+        41.3 : ["./thermistor_data/thermistor_test_0016.csv"],
+        43.0 : ["./thermistor_data/thermistor_test_0013.csv"],
+        47.6 : ["./thermistor_data/thermistor_test_0015.csv"],
+        51.0 : ["./thermistor_data/thermistor_test_0014.csv"],
+        53.3 : ["./thermistor_data/thermistor_test_0017.csv"],
+        56.9 : ["./thermistor_data/thermistor_test_0012.csv"],
+        62.3 : ["./thermistor_data/thermistor_test_0018.csv"],
+        67.6 : ["./thermistor_data/thermistor_test_0020.csv"],
+        70.5 : ["./thermistor_data/thermistor_test_0019.csv"],
     #     }
     
-    test_file_dict = {
+    # test_file_dict = {
         23.9 : ["./thermistor_data/thermistor_02_test_0000.csv"],
         29.3 : ["./thermistor_data/thermistor_02_test_0001.csv"],
         36.4 : ["./thermistor_data/thermistor_02_test_0002.csv"],
@@ -200,3 +203,100 @@ if __name__ == "__main__":
     temp_dict = calculate_fit_parameters(temp_dict)
     print_sensor_id_compatible_dict(temp_dict, sensor_id_dict)
     
+    # %%
+    fig, axes = plt.subplots(nrows=2, ncols=len(ch_ids))
+    fig.set_size_inches(np.asarray([1920, 1080])/fig.dpi)
+    
+    kwargs = {
+        "marker":".",
+        "ms":5,
+        "lw":1
+        }
+    
+    for i in range(len(ch_ids)):
+        ch_id = ch_ids[i]
+        resistance = temp_dict[ch_id]["dataframe"]["resistance"]
+        R_Tm = temp_dict[ch_id]["dataframe"]["R_Tm"]
+        temp_C = temp_dict[ch_id]["dataframe"]["temp_C"]
+        corrected_R = temp_dict[ch_id]["dataframe"]["corrected_R"]
+        corrected_T = temp_dict[ch_id]["dataframe"]["corrected_T"]
+        Tm = temp_dict[ch_id]["dataframe"]["Tm"]
+        color = COLOR_CYCLE[i%len(COLOR_CYCLE)]
+        sensor_id = sensor_id_dict[ch_id]
+        
+        axes[0, i].plot(resistance, R_Tm, 
+                     color=color, 
+                     label="Reference",
+                     **kwargs, )
+        
+        axes[0, i].plot(resistance, resistance, 
+                     color="k", 
+                     label="Measured",
+                     **kwargs, )
+        
+        axes[0, i].plot(resistance, corrected_R, 
+                     color="purple", 
+                     label="Corrected",
+                     **kwargs, )
+        
+        axes[0, i].legend(loc="upper left")
+        axes[0, i].set_xlabel(r"Sensor Resistance [$\Omega$]")
+        axes[0, i].set_ylabel(r"Computed Resistance [$\Omega$]")
+        
+        
+        axes[1, i].plot(
+            temp_C, Tm,
+            color=color,
+            label="Reference",
+            **kwargs,
+            )
+        
+        axes[1, i].plot(
+            temp_C, temp_C,
+            color="k",
+            label="Measured",
+            **kwargs,
+            )
+        
+        axes[1, i].plot(
+            temp_C, corrected_T,
+            color="purple",
+            label="Corrected",
+            **kwargs,
+            )
+        
+        
+        axes[1, i].legend(loc="upper left")
+        axes[1, i].set_xlabel(r"Sensor Temperature [$^\circ$C]")
+        axes[1, i].set_ylabel(r"Computed Temperature [$^\circ$C]")
+        
+        axes[0, i].set_title(f"Sensor {sensor_id}")
+        
+        
+        twinx_0 = axes[0, i].twinx()
+        twinx_0.plot(
+            resistance, R_Tm - corrected_R,
+            color=color,
+            **kwargs,
+            ls="--",
+            label="Correction Error"
+            )
+        twinx_0.legend(loc="lower right")
+        twinx_0.grid(which="both", axis="both")
+        axes[0, i].grid(which="both", axis="x")
+        
+        twinx_1 = axes[1, i].twinx()
+        twinx_1.plot(
+            temp_C, Tm - corrected_T,
+            color=color,
+            **kwargs,
+            ls="--",
+            label="Correction Error"
+            )
+        twinx_1.legend(loc="lower right")
+        twinx_1.grid(which="both", axis="both")
+        axes[1, i].grid(which="both", axis="x")
+        
+        
+    fig.suptitle("Thermistor Calibration Check")
+    fig.set_tight_layout(True)
