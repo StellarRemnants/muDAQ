@@ -190,7 +190,7 @@ def normalize_array(in1):
 if __name__ == "__main__":
     prefix = "thermistor_correlation_test"
     # prefix = "thermistor_test"
-    for i in [0]:#range(0, 9):
+    for i in [5]:#range(0, 9):
         data_file_path = (
             "/home/stellarremnants/muDAQ/"
             f"analysis_code/thermistor_data/{prefix}_{i:04d}.csv"
@@ -239,11 +239,15 @@ if __name__ == "__main__":
 # %%    
     # from scipy.optimize import minimize
     from scipy.interpolate import interp1d
-    from scipy.signal import (correlate, correlation_lags)
+    from scipy.signal import (correlate)
     ch_id_1 = 11; ch_id_2 = 34
     mode = "valid"
-    x1 = data_dict[ch_id_1]["temp_C"]; t1 = data_dict[ch_id_1]["TIME"]*1e-6
-    x2 = data_dict[ch_id_2]["temp_C"]; t2 = data_dict[ch_id_2]["TIME"]*1e-6
+    # x1 = data_dict[ch_id_1]["temp_C"]; t1 = data_dict[ch_id_1]["TIME"]*1e-6
+    # x2 = data_dict[ch_id_2]["temp_C"]; t2 = data_dict[ch_id_2]["TIME"]*1e-6
+    
+    
+    x1 = savgol_dict[ch_id_1]; t1 = data_dict[ch_id_1]["TIME"]*1e-6
+    x2 = savgol_dict[ch_id_2]; t2 = data_dict[ch_id_2]["TIME"]*1e-6
     
     dt = np.mean([np.mean(np.diff(t1)), np.mean(np.diff(t2))])
     start=np.max([np.min(t1), np.min(t2)])
@@ -259,10 +263,10 @@ if __name__ == "__main__":
     y1 = f1(t)
     y2 = f2(t)
     
-    window_length_time = 5
+    window_length_time = 0.1
     window_length_index = int(np.ceil(window_length_time/dt))
     
-    search_radius_time = 5
+    search_radius_time = 0.5
     search_radius_index = int(np.ceil(search_radius_time/dt))
     
     num_windows = num_points-window_length_index
