@@ -10,9 +10,6 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
-from multiprocessing import Pool
-from scipy.interpolate import interp1d
-from scipy.signal import (correlate)
 
 from file_read_functions import process_data_from_path
 
@@ -193,33 +190,60 @@ def normalize_array(in1):
 if __name__ == "__main__":
     prefix = "thermistor_correlation_test"
     # prefix = "thermistor_test"
-    # for i in [5]:#range(0, 9):
-    i = 6
-    data_file_path = (
-        "/home/stellarremnants/muDAQ/"
-        f"analysis_code/thermistor_data/{prefix}_{i:04d}.csv"
-        )
-    data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
-    
-    file_name = data_file_path.split(os.path.sep)[-1]
-    
-    identifier = f"\"{file_name}\"\n{start_datetime.ctime()} UTC"
-    y_key = "temp_C"
-    
+    for i in [0]:#range(0, 9):
+        data_file_path = (
+            "/home/stellarremnants/muDAQ/"
+            f"analysis_code/thermistor_data/{prefix}_{i:04d}.csv"
+            )
+        data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
+        
+        file_name = data_file_path.split(os.path.sep)[-1]
+        
+        identifier = f"\"{file_name}\"\n{start_datetime.ctime()} UTC"
+        y_key = "temp_C"
+        
+        fig, axes, savgol_dict, time_s_dict = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
+    # plt.close(fig)
 # %%
-    fig, axes, savgol_dict, time_s_dict = paired_time_series_fft_plot(data_dict, y_key=y_key, identifier=identifier)
     
+    # # from scipy.optimize import minimize
+    # from scipy.interpolate import interp1d
+    # from scipy.signal import (correlate, correlation_lags)
+    
+    # x1 = data_dict[11]["temp_C"]; t1 = data_dict[11]["TIME"]*1e-6
+    # x2 = data_dict[34]["temp_C"]; t2 = data_dict[34]["TIME"]*1e-6
+    
+    # dt = np.mean([np.mean(np.diff(t1)), np.mean(np.diff(t2))])
+    # start=np.max([np.min(t1), np.min(t2)])
+    # end=np.min([np.max(t1), np.max(t2)])
+    # num_points = int(np.ceil((end-start)/dt))
+    
+    # t = np.linspace(start, end, num_points)
+    # # t = np.linspace(
+    # #     )
+    # f1 = interp1d(t1, x1, kind="cubic")
+    # f2 = interp1d(t2, x2, kind="cubic")
+    
+    # y1 = f1(t)
+    # y2 = f2(t)
+    
+    # corr = correlate(y1, y2, mode="full")
+    # lags = correlation_lags(len(y1), len(y2), mode="full")
+    
+    # max_cor_arg = np.argmax(corr)
+    # max_cor = corr[max_cor_arg]
+    # max_lag = lags[max_cor_arg]
+    
+    # lag_time = max_lag * dt
     
 # %%    
     # from scipy.optimize import minimize
+    from scipy.interpolate import interp1d
+    from scipy.signal import (correlate, correlation_lags)
     ch_id_1 = 11; ch_id_2 = 34
     mode = "valid"
     x1 = data_dict[ch_id_1]["temp_C"]; t1 = data_dict[ch_id_1]["TIME"]*1e-6
     x2 = data_dict[ch_id_2]["temp_C"]; t2 = data_dict[ch_id_2]["TIME"]*1e-6
-    
-    
-    # x1 = savgol_dict[ch_id_1]; t1 = data_dict[ch_id_1]["TIME"]*1e-6
-    # x2 = savgol_dict[ch_id_2]; t2 = data_dict[ch_id_2]["TIME"]*1e-6
     
     dt = np.mean([np.mean(np.diff(t1)), np.mean(np.diff(t2))])
     start=np.max([np.min(t1), np.min(t2)])
@@ -227,16 +251,18 @@ if __name__ == "__main__":
     num_points = int(np.ceil((end-start)/dt))
     
     t = np.linspace(start, end, num_points)
+    # t = np.linspace(
+    #     )
     f1 = interp1d(t1, x1, kind="cubic")
     f2 = interp1d(t2, x2, kind="cubic")
     
     y1 = f1(t)
     y2 = f2(t)
     
-    window_length_time = 20
+    window_length_time = 5
     window_length_index = int(np.ceil(window_length_time/dt))
     
-    search_radius_time = 10
+    search_radius_time = 5
     search_radius_index = int(np.ceil(search_radius_time/dt))
     
     num_windows = num_points-window_length_index
@@ -268,8 +294,8 @@ if __name__ == "__main__":
     min_val = search_radius_index
     max_val = num_windows-search_radius_index
     num_vals = max_val-min_val
+    print()
     
-# %%
     def corr_fnc(i):
         
         window_1 = np.asarray([i, i+window_length_index])
@@ -298,8 +324,20 @@ if __name__ == "__main__":
         savgol_max_lag = (savgol_max_cor_arg+window_2[0]-i) * dt
         savgol_lag_time = savgol_max_lag
         
+        # del(window_1)
+        # del(window_2)
+        
+        # del(s1)
+        # del(s2)
+        
+        # del(corr)
+        # del(savgol_corr)
+        
+        # del(max_lag)
+        
         return [i, lag_time, norm_corr, savgol_lag_time, norm_savgol]
         
+    from multiprocessing import Pool
     p = Pool()
     it = p.imap(corr_fnc, range(min_val, max_val), chunksize=100)
     for i, lag_time, norm_corr, savgol_lag_time, norm_savgol in it:
@@ -311,7 +349,60 @@ if __name__ == "__main__":
     p.close()
     p.terminate()
     p.join()
-
+    # %%
+    # for i, lag_time, norm_corr, savgol_lag_time, norm_savgol in res:
+        
+    #     savgol_lags[i] = savgol_lag_time
+    #     lag_times[i] = lag_time
+    #     correlations[i, :] = norm_corr
+    #     savgol_correlations[i, :] = norm_savgol
+        
+    # del (res)
+    
+    
+# %%
+    # for i in range(min_val, max_val):
+    #     completion_fraction = (i-min_val+1)/num_vals
+    #     print(f"\r{i-min_val+1}/{num_vals} : {completion_fraction:.2%}", end="")
+    #     window_1 = np.asarray([i, i+window_length_index])
+    #     window_2 = np.asarray([
+    #         np.max([0, i-search_radius_index]),
+    #         np.min([num_points, i+window_length_index+search_radius_index])
+    #         ])
+    #     s1 = y1[window_1[0]:window_1[1]]
+    #     s2 = y2[window_2[0]:window_2[1]]
+        
+    #     window_sizes[i, 0] = window_1[1]-window_1[0]
+    #     window_sizes[i, 1] = window_2[1]-window_2[0]
+        
+    #     corr = correlate(s1, s2, mode=mode)
+    #     # lags = correlation_lags(len(s1), len(s2), mode=mode)
+        
+    #     norm_corr = normalize_array(corr)
+    #     max_cor_arg = np.argmax(norm_corr)
+    #     # max_cor = corr[max_cor_arg]
+    #     max_lag = (max_cor_arg+window_2[0]-i) * dt
+    #     corr_len[i] = len(norm_corr)
+    #     lag_time = max_lag
+    #     lag_times[i] = lag_time
+        
+        
+    #     correlations[i, :] = norm_corr
+        
+    #     savgol_window = int(np.ceil(corr_size/5))
+    #     if savgol_window % 2 == 0:
+    #         savgol_window += 1
+    #     savgol_corr = savgol_filter(norm_corr, 
+    #                                 window_length = savgol_window,
+    #                                 polyorder=1)
+    #     norm_savgol = normalize_array(savgol_corr)
+    #     savgol_correlations[i, :] = norm_savgol
+    #     savgol_max_cor_arg = np.argmax(norm_savgol)
+    #     savgol_max_lag = (savgol_max_cor_arg+window_2[0]-i) * dt
+    #     savgol_lag_time = savgol_max_lag
+    #     savgol_lags[i] = savgol_lag_time
+        
+        
         
 # %%
     fig, axes = plt.subplots(nrows=3, sharex=True)
@@ -376,15 +467,72 @@ if __name__ == "__main__":
                 lw=1)
         
 # %%
-
-# Generate Synthetic Data
-
-period = 5 #s
-
-offset = 1 #s
-
-duration = 60
-
-dt = 0.0020514525584195845
+    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    # x = new_t
+    # y = np.linspace(time_low, time_high, corr_size, endpoint=True)
+    # z = sliced_savgol_correlations
+    # Z = z
+    # X, Y = np.meshgrid(x, y)
+    # ax.plot_surface(X, Y, Z, cmap="hot")
+    # ax.set_xlabel("Time Elapsed [s]")
+    # ax.set_ylabel("Time Lag [s]")
+    # ax.set_zlabel("Normalized Correlation")
+    
+    
+# %%
+    # key_list = list(data_dict.keys())
+    # fig, axes = plt.subplots(nrows=len(key_list), sharex=True, sharey=True)
+    
+    # frequency_label = "Frequency [Hz]"
+    # time_label = "Time [s]"
+    # if y_key == "temp_C":
+    #     fft_ylabel = r"Temperature PSD [$^\circ$C$^2$/Hz]"
+    # elif y_key == "voltage":
+    #     fft_ylabel = r"Voltage PSD [V$^2$/Hz]"
+    # elif y_key == "ADC":
+    #     fft_ylabel = r"ADC PSD [ADC$^2$/Hz]"
+    # elif y_key == "resistance":
+    #     fft_ylabel = r"Resistance PSD [$\Omega$$^2$/Hz]"
+    # else:
+    #     fft_ylabel = r"Unknown PSD [?/Hz]"
+            
+    # for i in range(len(key_list)):
+    #     ch_id = key_list[i]
+    #     spectrum, freqs, t, im = axes[i].specgram(
+    #         x = data_dict[ch_id][y_key],
+    #         # x = savgol_dict[ch_id],
+    #         Fs = 1/(np.mean(np.diff(time_s_dict[ch_id])))
+    #         )
+    #     cb = fig.colorbar(im, ax=axes[i])    
+    #     axes[i].set_ylabel(frequency_label)
+    #     cb.set_label(fft_ylabel)
+    # axes[-1].set_xlabel(time_label)
+    # plt.close(fig)
+# %%
+    # print([[np.mean(data_dict[ch_id]["resistance"]), np.mean(data_dict[ch_id]["temp_C"])] for ch_id in key_list])
+# %%
+    # fig, axes = plt.subplots(nrows=len(key_list), sharex = True, sharey = False)
+    
+    # resample_count = np.min([savgol_dict[ch_id].size for ch_id in savgol_dict.keys()])
+    # min_t = np.max([np.min(time_s_dict[ch_id][:10]) for ch_id in time_s_dict.keys()])
+    # max_t = np.min([np.max(time_s_dict[ch_id][-10:]) for ch_id in time_s_dict.keys()])
+    
+    # time_points = np.linspace(min_t, max_t, resample_count)
+    # interp_y = np.zeros([len(key_list), resample_count], dtype=float)
+    # for i in range(len(key_list)):
+    #     ch_id = key_list[i]
+    #     x_data = time_s_dict[ch_id]
+    #     y_data = savgol_dict[ch_id]
+        
+    #     new_y = np.interp(time_points, x_data, y_data)
+    #     interp_y[i, :] = new_y
+    #     axes[i].plot(x_data, y_data, 
+    #                  color="k",
+    #                  marker=".", ms=5, ls="-", lw=2)
+        
+    #     axes[i].plot(time_points, new_y, 
+    #                  color=COLOR_CYCLE[i%len(COLOR_CYCLE)],
+    #                  marker=".", ms=5, ls="-", lw=2, alpha=1)
+        
         
         

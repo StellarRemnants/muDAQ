@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jun 23 14:53:51 2022
+
+@author: stellarremnants
+"""
+
+    # fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    # x = new_t
+    # y = np.linspace(time_low, time_high, corr_size, endpoint=True)
+    # z = sliced_savgol_correlations
+    # Z = z
+    # X, Y = np.meshgrid(x, y)
+    # ax.plot_surface(X, Y, Z, cmap="hot")
+    # ax.set_xlabel("Time Elapsed [s]")
+    # ax.set_ylabel("Time Lag [s]")
+    # ax.set_zlabel("Normalized Correlation")
+    
+    
+# %%
+    # key_list = list(data_dict.keys())
+    # fig, axes = plt.subplots(nrows=len(key_list), sharex=True, sharey=True)
+    
+    # frequency_label = "Frequency [Hz]"
+    # time_label = "Time [s]"
+    # if y_key == "temp_C":
+    #     fft_ylabel = r"Temperature PSD [$^\circ$C$^2$/Hz]"
+    # elif y_key == "voltage":
+    #     fft_ylabel = r"Voltage PSD [V$^2$/Hz]"
+    # elif y_key == "ADC":
+    #     fft_ylabel = r"ADC PSD [ADC$^2$/Hz]"
+    # elif y_key == "resistance":
+    #     fft_ylabel = r"Resistance PSD [$\Omega$$^2$/Hz]"
+    # else:
+    #     fft_ylabel = r"Unknown PSD [?/Hz]"
+            
+    # for i in range(len(key_list)):
+    #     ch_id = key_list[i]
+    #     spectrum, freqs, t, im = axes[i].specgram(
+    #         x = data_dict[ch_id][y_key],
+    #         # x = savgol_dict[ch_id],
+    #         Fs = 1/(np.mean(np.diff(time_s_dict[ch_id])))
+    #         )
+    #     cb = fig.colorbar(im, ax=axes[i])    
+    #     axes[i].set_ylabel(frequency_label)
+    #     cb.set_label(fft_ylabel)
+    # axes[-1].set_xlabel(time_label)
+    # plt.close(fig)
+# %%
+    # print([[np.mean(data_dict[ch_id]["resistance"]), np.mean(data_dict[ch_id]["temp_C"])] for ch_id in key_list])
+# %%
+    # fig, axes = plt.subplots(nrows=len(key_list), sharex = True, sharey = False)
+    
+    # resample_count = np.min([savgol_dict[ch_id].size for ch_id in savgol_dict.keys()])
+    # min_t = np.max([np.min(time_s_dict[ch_id][:10]) for ch_id in time_s_dict.keys()])
+    # max_t = np.min([np.max(time_s_dict[ch_id][-10:]) for ch_id in time_s_dict.keys()])
+    
+    # time_points = np.linspace(min_t, max_t, resample_count)
+    # interp_y = np.zeros([len(key_list), resample_count], dtype=float)
+    # for i in range(len(key_list)):
+    #     ch_id = key_list[i]
+    #     x_data = time_s_dict[ch_id]
+    #     y_data = savgol_dict[ch_id]
+        
+    #     new_y = np.interp(time_points, x_data, y_data)
+    #     interp_y[i, :] = new_y
+    #     axes[i].plot(x_data, y_data, 
+    #                  color="k",
+    #                  marker=".", ms=5, ls="-", lw=2)
+        
+    #     axes[i].plot(time_points, new_y, 
+    #                  color=COLOR_CYCLE[i%len(COLOR_CYCLE)],
+    #                  marker=".", ms=5, ls="-", lw=2, alpha=1)
+        
