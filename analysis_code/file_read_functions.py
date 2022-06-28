@@ -123,6 +123,8 @@ def process_data_from_path(data_file_path,
         if ch_id in data_dict.keys():
             sensor_type = channel_settings[ch_id]["sensor_type"].lower()
             if sensor_type == "thermistor":
+                cond = data_dict[ch_id]["voltage"] > 0
+                data_dict[ch_id] = data_dict[ch_id].loc[cond]
                 resistance = thermisor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
                                                                channel_settings[ch_id]["ref_resistance"], 
                                                                channel_settings[ch_id]["ref_voltage"])
