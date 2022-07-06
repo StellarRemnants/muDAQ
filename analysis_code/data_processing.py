@@ -380,11 +380,23 @@ if __name__ == "__main__":
 # Generate Synthetic Data
 
 period = 5 #s
-
 offset = 1 #s
-
 duration = 60
 
+amplitude_1 = 1
+amplitude_2 = 1
+
+mean_1 = 10
+mean_2 = 10
+
+
+
 dt = 0.0020514525584195845
+
+t = np.arange(0, duration, dt)
+
+s1 = amplitude_1 * np.sin(2*np.pi/period*t) + mean_1
+s2 = amplitude_2 * np.sin(2*np.pi/period*t+offset/period) + mean_2
         
-        
+plt.plot(t, s1)
+plt.plot(t, s2)

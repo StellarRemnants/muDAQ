@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 from file_read_functions import thermistor_temp_C_from_resistance
-from thermistor_calibration import ln_fit_fnc, ln_fit_variable
+# from thermistor_calibration import ln_fit_fnc, ln_fit_variable
 
 factory_file = "thermistor_factory_calibration_data.csv"
 data_file = "Thermistor Calibration 2.csv"
