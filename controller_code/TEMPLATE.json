@@ -1,0 +1,52 @@
+{
+  "program_name": "TEMPLATE PROGRAM",
+  "delay_on_empty": 0.01,
+  "device_list": [
+    {
+      "port": "/dev/ttyUSB0",
+      "device_name": "Arduino Artemis ATP",
+      "data_file_prefix": "../../analysis_code/thermistor_data/TEMPLATE",
+      "baudrate": 230400,
+      "ignore_first_lines": 10,
+      "check_port_exists": false,
+      "collection_mode": "duration",
+      "collection_duration": 10,
+      "collection_count": null,
+      "delay_on_empty": 0.01,
+      "max_voltage": 2,
+      "bit_resolution": 14,
+      "channel_list": [
+        {
+          "channel_name": "TEMPLATE_01",
+          "pin_id": 11,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "00"
+        },
+        {
+          "channel_name": "TEMPLATE_00",
+          "pin_id": 29,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "micro_betachip",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "01"
+        },
+	{
+	  "channel_name": "TEMPLATE_02",
+	  "pin_id": 34,
+	  "pin_delay": 500,
+	  "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+	  "ref_resistance": 10000,
+	  "ref_voltage": 3.3,
+	  "sensor_id": "02"
+	}
+      ]
+    }
+  ]
+}

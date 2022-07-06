@@ -48,7 +48,6 @@ FIT_DICT = {
            -1.33695492e+01,  1.51464061e+00, -1.12560833e-01,  5.30393967e-03,
            -1.43971693e-04,  1.71656200e-06]
          },
-    
     }
 
 def ln_fit_variable(R, *args):
@@ -112,8 +111,11 @@ def adc_to_voltage(dataframe, max_voltage, bit_resolution):
 def thermisor_resistance_from_voltage(voltage_array, ref_resistance, ref_voltage):
     return ref_resistance * voltage_array / (ref_voltage- voltage_array)
 
-def thermistor_temp_C_from_resistance(resistance, fit_degree=6):
-    return ln_fit_variable(resistance, *FIT_DICT["micro_betachip"][fit_degree])
+def thermistor_temp_C_from_resistance(resistance, fit_degree=6, thermistor_type="micro_betachip"):
+    if thermistor_type == "unknown":
+        return resistance
+    else:
+        return ln_fit_variable(resistance, *FIT_DICT[thermistor_type][fit_degree])
 
 def separate_channels(dataframe):
     channel_ids = np.unique(dataframe["CH"])
@@ -144,6 +146,7 @@ def process_data_from_path(data_file_path,
         if ch_id in data_dict.keys():
             sensor_type = channel_settings[ch_id]["sensor_type"].lower()
             if sensor_type == "thermistor":
+                thermistor_type = channel_settings[ch_id]["thermistor_type"].lower()
                 cond = data_dict[ch_id]["voltage"] > 0
                 data_dict[ch_id] = data_dict[ch_id].loc[cond]
                 resistance = thermisor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
@@ -154,7 +157,9 @@ def process_data_from_path(data_file_path,
                     if sensor_id.lower() != "unknown":
                         resistance = correct_resistance(resistance, sensor_id)
                 data_dict[ch_id] = data_dict[ch_id].assign(resistance=resistance).reset_index(drop=True)
-                temp_C = thermistor_temp_C_from_resistance(resistance, fit_degree=fit_degree)
+                temp_C = thermistor_temp_C_from_resistance(resistance, 
+                                                           fit_degree=fit_degree, 
+                                                           thermistor_type=thermistor_type)
                 data_dict[ch_id] = data_dict[ch_id].assign(temp_C=temp_C).reset_index(drop=True)
             else:
                 raise NotImplementedError(f"Analysis for sensor_type \"{sensor_type}\" is not yet implemented")
@@ -166,7 +171,6 @@ def process_data_from_path(data_file_path,
 
 if __name__ == "__main__":
     data_file_path = (
-        "/home/stellarremnants/muDAQ/"
-        "analysis_code/thermistor_data/thermistor_test_0011.csv"
+        "./thermistor_data/thermistor_02_test_0008.csv"
         )
     data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
