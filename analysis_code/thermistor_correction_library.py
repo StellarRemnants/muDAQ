@@ -19,6 +19,8 @@ CORRECTION_DICT = { # Newest (2022-06-21) calibrations
 	"00" : [-9.6672e+01,  9.1816e-01,  1.2244e-05, ],
 	"01" : [-3.3676e+01,  9.6349e-01,  1.0955e-05, ],
 	"02" : [ 4.4043e+00,  1.1898e+00, -1.4251e-05, ],
+    "03" : [0,1,0],
+    "04" : [0,1,0],
 	}
 # CORRECTION_DICT = { # All data - larger errors, potential 
                       #  discrepancies between measurment times

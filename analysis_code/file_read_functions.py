@@ -113,7 +113,7 @@ def thermisor_resistance_from_voltage(voltage_array, ref_resistance, ref_voltage
 
 def thermistor_temp_C_from_resistance(resistance, fit_degree=6, thermistor_type="micro_betachip"):
     if thermistor_type == "unknown":
-        return resistance
+        return ln_fit_variable(resistance, *FIT_DICT["micro_betachip"][fit_degree])
     else:
         return ln_fit_variable(resistance, *FIT_DICT[thermistor_type][fit_degree])
 
@@ -146,7 +146,10 @@ def process_data_from_path(data_file_path,
         if ch_id in data_dict.keys():
             sensor_type = channel_settings[ch_id]["sensor_type"].lower()
             if sensor_type == "thermistor":
-                thermistor_type = channel_settings[ch_id]["thermistor_type"].lower()
+                if "thermistor_type" in channel_settings[ch_id].keys():
+                    thermistor_type = channel_settings[ch_id]["thermistor_type"].lower()
+                else:
+                    thermistor_type = "unknown"
                 cond = data_dict[ch_id]["voltage"] > 0
                 data_dict[ch_id] = data_dict[ch_id].loc[cond]
                 resistance = thermisor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
@@ -160,6 +163,10 @@ def process_data_from_path(data_file_path,
                 temp_C = thermistor_temp_C_from_resistance(resistance, 
                                                            fit_degree=fit_degree, 
                                                            thermistor_type=thermistor_type)
+                # print(ch_id)
+                # print(thermistor_type)
+                # print(temp_C)
+                # print("---")
                 data_dict[ch_id] = data_dict[ch_id].assign(temp_C=temp_C).reset_index(drop=True)
             else:
                 raise NotImplementedError(f"Analysis for sensor_type \"{sensor_type}\" is not yet implemented")
