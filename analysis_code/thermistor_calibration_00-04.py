@@ -43,17 +43,30 @@ def lighten_color(color_code, proportion=0.5):
 def darken_color(color_code, proportion=0.5):
     return mix_colors(color_code, "#000000", proportion)
 
-
+file_prefix = "00-04_02_calibration_"
+file_dir = "thermistor_data/"
+file_path_prefix = f"{file_dir}{file_prefix}"
 file_list = [
-    
-    [29.5, 29.9, 29.7, "thermistor_data/00-04_calibration_0001.csv"],
-    [34.4, 35.5, 35.6, "thermistor_data/00-04_calibration_0002.csv"],
-    [38.3, 39.6, 40.3, "thermistor_data/00-04_calibration_0003.csv"],
-    [42.0, 43.7, 45.5, "thermistor_data/00-04_calibration_0004.csv"],
-    [46.2, 47.6, 50.8, "thermistor_data/00-04_calibration_0005.csv"],
-    [51.3, 65.6, 55.0, "thermistor_data/00-04_calibration_0006.csv"],
-    [52.9, 72.1, 60.8, "thermistor_data/00-04_calibration_0007.csv"],
-    [56.1, 77.7, 65.8, "thermistor_data/00-04_calibration_0008.csv"],
+    [25.9, 26.0, 30.3, "0000"],
+    [26.1, 26.2, 30.7, "0001"],
+    [26.6, 26.7, 33.6, "0002"],
+    [27.3, 27.4, 33.0, "0003"],
+    [27.9, 28.0, 34.0, "0004"],
+    [28.3, 28.4, 35.0, "0005"],
+    [29.0, 29.0, 36.2, "0006"],
+    [29.5, 29.6, 37.1, "0007"],
+    [30.0, 30.2, 38.1, "0008"],
+    [30.4, 30.6, 39.1, "0009"],
+    [31.0, 31.0, 40.0, "0010"],
+    [31.3, 31.4, 41.1, "0011"],
+    # [29.5, 29.9, 29.7, "thermistor_data/00-04_calibration_0001.csv"],
+    # [34.4, 35.5, 35.6, "thermistor_data/00-04_calibration_0002.csv"],
+    # [38.3, 39.6, 40.3, "thermistor_data/00-04_calibration_0003.csv"],
+    # [42.0, 43.7, 45.5, "thermistor_data/00-04_calibration_0004.csv"],
+    # [46.2, 47.6, 50.8, "thermistor_data/00-04_calibration_0005.csv"],
+    # [51.3, 65.6, 55.0, "thermistor_data/00-04_calibration_0006.csv"],
+    # [52.9, 72.1, 60.8, "thermistor_data/00-04_calibration_0007.csv"],
+    # [56.1, 77.7, 65.8, "thermistor_data/00-04_calibration_0008.csv"],
     ]
 
 
@@ -84,8 +97,8 @@ resistances = pandas.DataFrame(np.zeros([len(file_list), NUM_CHANNELS], dtype=fl
 
 
 for i in range(len(file_list)):
-    T1, T2, Tc, file_path = file_list[i]
-    
+    T1, T2, Tc, file_path_affix = file_list[i]
+    file_path = f"{file_path_prefix}{file_path_affix}.csv"
     data_dict, device_dict, start_datetime = process_data_from_path(file_path,
                                                                     correct_on_sensor_id=False)
     
@@ -96,9 +109,9 @@ for i in range(len(file_list)):
         resistances.iloc[i].loc[keys_list[j]] = np.mean(data_dict[keys_list[j]]["resistance"])
         
     
-resistances.drop([29], axis=1, inplace=True)
-pin_ids = [11, 16, 33, 34]
-NUM_CHANNELS = len(pin_ids)
+# resistances.drop([29], axis=1, inplace=True)
+# pin_ids = [11, 16, 33, 34]
+# NUM_CHANNELS = len(pin_ids)
         
 # %%
 NROWS = 2
