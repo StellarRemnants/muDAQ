@@ -20,6 +20,30 @@ from thermistor_calibration_library import (
     )
 
 
+PROP_CYCLE = plt.rcParams['axes.prop_cycle']
+COLOR_CYCLE = PROP_CYCLE.by_key()['color']
+
+def mix_colors(color_1_code, color_2_code="#000000", proportion=0.5):
+    color_1_ints = np.asarray([int(color_1_code[1:][2*i:2*(i+1)], 16) for i in range(3)])
+    color_2_ints = np.asarray([int(color_2_code[1:][2*i:2*(i+1)], 16) for i in range(3)])
+    mixed_floats = color_1_ints*(1-proportion) + proportion * color_2_ints
+    mixed_ceil = np.ceil(mixed_floats)
+    mixed_ints = [int(i) for i in mixed_ceil]
+    color_code_ret = "#"
+    for i in mixed_ints:
+        code_val = f"{hex(i)[2:]}"
+        if len(code_val) == 1:
+            code_val = "0" + code_val
+        color_code_ret += code_val
+    return color_code_ret
+
+def lighten_color(color_code, proportion=0.5):
+    return mix_colors(color_code, "#FFFFFF", proportion)
+
+def darken_color(color_code, proportion=0.5):
+    return mix_colors(color_code, "#000000", proportion)
+
+
 file_list = [
     
     [29.5, 29.9, 29.7, "thermistor_data/00-04_calibration_0001.csv"],
@@ -58,6 +82,7 @@ NUM_CHANNELS = len(pin_ids)
 resistances = pandas.DataFrame(np.zeros([len(file_list), NUM_CHANNELS], dtype=float),
                                columns=pin_ids)
 
+
 for i in range(len(file_list)):
     T1, T2, Tc, file_path = file_list[i]
     
@@ -70,19 +95,29 @@ for i in range(len(file_list)):
     for j in range(len(keys_list)):
         resistances.iloc[i].loc[keys_list[j]] = np.mean(data_dict[keys_list[j]]["resistance"])
         
+    
+resistances.drop([29], axis=1, inplace=True)
+pin_ids = [11, 16, 33, 34]
+NUM_CHANNELS = len(pin_ids)
+        
 # %%
 NROWS = 2
-fig, axes = plt.subplots(ncols=NUM_CHANNELS, nrows=NROWS, sharex=False, sharey=False)
+fig, axes = plt.subplots(ncols=NUM_CHANNELS, nrows=NROWS, sharex='row', sharey='row')
 fig.set_size_inches(np.asarray([1920, 1080])/fig.dpi)
 twinaxes = np.asarray([np.asarray([ax.twinx() for ax in axes[i, :]]) for i in range(NROWS)])
-
+twinaxes[0,0].get_shared_y_axes().join(*twinaxes[0,:])
+twinaxes[1,0].get_shared_y_axes().join(*twinaxes[1,:])
 fit_level = 6
 max_correct_pow = 6
 sensor_types = ["micro_betachip"] * NUM_CHANNELS
 
-color_cycle = ["red", "green", "blue"]
+# color_cycle = ["red", "green", "blue"]
+color_cycle=COLOR_CYCLE
 
-# t_vals = (s1, s2, cr)
+rs_of_t_labels = ["S1", "S2", "CR"]
+DARKENING = 0.25
+
+# t_vals = [s1, s2, cr]
 t_vals = [s1]
 rs_of_t = [R_of_T_factory(s) for s in t_vals]
 for i in range(NUM_CHANNELS):
@@ -90,42 +125,74 @@ for i in range(NUM_CHANNELS):
     twinax = twinaxes[0, i]
     ax2 = axes[1, i]
     twinax2 = twinaxes[1, i]
+    ax.grid()
+    ax2.grid()
+    
+    if i < NUM_CHANNELS - 1:
+        twinax.axes.get_yaxis().set_visible(False)
+        twinax2.axes.get_yaxis().set_visible(False)
     
     r_meas = np.asarray(resistances[pin_ids[i]])
     
+    sensor_type = sensor_types[i]
+    T_meas = ln_fit_variable(r_meas, *FIT_DICT[sensor_type][fit_level])
+    
+    ax2.plot(T_meas, T_meas, color="grey")
+
     ax.plot(r_meas, r_meas, color="grey")
     ax.set_title(f"Channel {pin_ids[i]}")
+    ax.set_xlabel(rf"CH {pin_ids[i]} Resistance [$\Omega$]")
+    ax2.set_xlabel(rf"CH {pin_ids[i]} Temperature [$^\circ$C]")
     
     for j in range(len(rs_of_t)):
         r_of_t = rs_of_t[j]
-        # ax.plot(r_of_t, r_of_t, color="purple")
-        
         fit_params, covar = polynomial_fit(r_meas, r_of_t, max_pow=max_correct_pow)
-        
         new_r = polynomial_variable(r_meas, *fit_params)
-        
         diff = r_of_t - r_meas
         new_diff = r_of_t - new_r
         
-        ax.plot(r_meas, r_of_t, color="k", marker=".")
-        ax.plot(r_meas, new_r, color=color_cycle[j], marker=".")
-        twinax.plot(r_meas, diff, ls="--", color="k", marker=".")
-        twinax.plot(r_meas, new_diff, ls="--", color=color_cycle[j], marker=".")
+        color = color_cycle[j%len(color_cycle)]
+        dark_color = darken_color(color, proportion=DARKENING)
+        
+        ax.plot(r_meas, r_of_t, color=dark_color, marker=".")
+        ax.plot(r_meas, new_r, color=color, marker=".")
+        twinax.plot(r_meas, diff, ls="--", color=dark_color, marker=".")
+        twinax.plot(r_meas, new_diff, ls="--", color=color, marker=".")
         
         
-        
-        # fit_vals = [0, 1]
-        sensor_type = sensor_types[i]
-        T_meas = ln_fit_variable(r_meas, *FIT_DICT[sensor_type][fit_level])
         new_T = ln_fit_variable(new_r, *FIT_DICT[sensor_type][fit_level])
-        ax2.plot(T_meas, t_vals[j], color="k")
-        ax2.plot(new_T, t_vals[j], color=color_cycle[j])
+        ax2.plot(T_meas, t_vals[j], color=dark_color)
+        ax2.plot(new_T, t_vals[j], color=color)
         
         old_T_diff = t_vals[j] - T_meas
         new_T_diff = t_vals[j] - new_T
         
-        twinax2.plot(T_meas, old_T_diff, color="k", ls="--", marker=".")
-        twinax2.plot(T_meas, new_T_diff, color=color_cycle[j], marker=".")
+        twinax2.plot(T_meas, old_T_diff, color=dark_color, ls="--", marker=".")
+        twinax2.plot(T_meas, new_T_diff, color=color, marker=".", ls="--")
         
+        
+        
+        # ax.set_edgecolor("k")
 
-fig.tight_layout()
+axes[0,0].set_ylabel(r'Thermocouple "Resistance" [$\Omega$]')
+axes[1,0].set_ylabel(r"Thermocouple Temperature [$^\circ$C]")
+twinaxes[0,-1].set_ylabel(r"Resistance Misfit [$\Omega$]")
+twinaxes[1,-1].set_ylabel(r"Temperature Misfit [$^\circ$C]")
+plt.subplots_adjust(
+    left=0.05,
+    right=0.95,
+    top=0.9,
+    bottom=0.1,
+    hspace=0.2,
+    wspace=0.05,
+    )
+# fig.supxlabel("Thermistor Reading")
+# fig.supylabel("Thermocouple Reading", 
+#               x=0.01,
+#               horizontalalignment="center",
+#               verticalalignment="center")
+# fig.supylabel("Difference", 
+#               x=0.95,
+#               horizontalalignment="center",
+#               verticalalignment="center")
+# fig.tight_layout()
