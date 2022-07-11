@@ -168,6 +168,9 @@ def process_data_from_path(data_file_path,
                 # print(temp_C)
                 # print("---")
                 data_dict[ch_id] = data_dict[ch_id].assign(temp_C=temp_C).reset_index(drop=True)
+            elif sensor_type == "unknown":
+                pass
+            
             else:
                 raise NotImplementedError(f"Analysis for sensor_type \"{sensor_type}\" is not yet implemented")
                 
