@@ -59,6 +59,21 @@ file_list = [
     [30.4, 30.6, 39.1, "0009"],
     [31.0, 31.0, 40.0, "0010"],
     [31.3, 31.4, 41.1, "0011"],
+    [33.6, 33.5, 42.1, "0012"],
+    [34.2, 34.2, 43.0, "0013"],
+    [34.4, 34.4, 43.9, "0014"],
+    [34.5, 34.5, 44.0, "0015"],
+    [34.8, 34.7, 45.0, "0016"],
+    [35.0, 35.0, 46.1, "0017"],
+    [35.4, 35.4, 46.9, "0018"],
+    [35.7, 35.7, 48.0, "0019"],
+    [35.9, 35.9, 48.9, "0020"],
+    [36.3, 36.3, 49.9, "0021"],
+    [36.6, 36.6, 51.0, "0022"],
+    [37.0, 37.0, 51.9, "0023"],
+    [37.3, 37.3, 53.0, "0024"],
+    [37.8, 37.7, 54.0, "0025"],
+    [38.2, 38.1, 55.0, "0026"],
     # [29.5, 29.9, 29.7, "thermistor_data/00-04_calibration_0001.csv"],
     # [34.4, 35.5, 35.6, "thermistor_data/00-04_calibration_0002.csv"],
     # [38.3, 39.6, 40.3, "thermistor_data/00-04_calibration_0003.csv"],
@@ -127,13 +142,19 @@ sensor_types = ["micro_betachip"] * NUM_CHANNELS
 # color_cycle = ["red", "green", "blue"]
 color_cycle=COLOR_CYCLE
 
-rs_of_t_labels = ["S1", "S2", "CR"]
-DARKENING = 0.25
+rs_of_t_labels = ["S1", "S2", "Ctr"]
+DARKENING = 0.35
 
 # t_vals = [s1, s2, cr]
 t_vals = [s1]
 rs_of_t = [R_of_T_factory(s) for s in t_vals]
 for i in range(NUM_CHANNELS):
+    
+    print(
+        "---\n"
+        f"CH: {pin_ids[i]}\n"
+        "---"
+        )
     ax = axes[0, i]
     twinax = twinaxes[0, i]
     ax2 = axes[1, i]
@@ -160,6 +181,10 @@ for i in range(NUM_CHANNELS):
     for j in range(len(rs_of_t)):
         r_of_t = rs_of_t[j]
         fit_params, covar = polynomial_fit(r_meas, r_of_t, max_pow=max_correct_pow)
+        
+        print(f"Source: {rs_of_t_labels[j]}")
+        print(f"Fit:\n{fit_params}")
+        
         new_r = polynomial_variable(r_meas, *fit_params)
         diff = r_of_t - r_meas
         new_diff = r_of_t - new_r
@@ -183,9 +208,11 @@ for i in range(NUM_CHANNELS):
         twinax2.plot(T_meas, old_T_diff, color=dark_color, ls="--", marker=".")
         twinax2.plot(T_meas, new_T_diff, color=color, marker=".", ls="--")
         
-        
+        max_diff = np.max(abs(new_T_diff))
+        print(f"Max Diff: {max_diff}")
         
         # ax.set_edgecolor("k")
+        print()
 
 axes[0,0].set_ylabel(r'Thermocouple "Resistance" [$\Omega$]')
 axes[1,0].set_ylabel(r"Thermocouple Temperature [$^\circ$C]")
