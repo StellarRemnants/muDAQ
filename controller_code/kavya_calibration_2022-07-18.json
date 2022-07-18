@@ -1,0 +1,92 @@
+{
+  "program_name": "Kavya Amphenol Calibration - Recirculating Water Bath",
+  "delay_on_empty": 0.01,
+  "device_list": [
+    {
+      "port": "/dev/ttyUSB1",
+      "device_name": "Arduino Artemis ATP",
+      "data_file_prefix": "/home/stellarremnants/muDAQ/analysis_code/thermistor_data/kavya_water_bath_calibration/kwbc",
+      "baudrate": 230400,
+      "ignore_first_lines": 10,
+      "check_port_exists": false,
+      "collection_mode": "duration",
+      "collection_duration": 10,
+      "collection_count": null,
+      "delay_on_empty": 0.01,
+      "max_voltage": 2,
+      "bit_resolution": 14,
+      "channel_list": [
+        {
+          "channel_name": "K07",
+          "pin_id": 13,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "K07"
+        },
+        {
+          "channel_name": "K05",
+          "pin_id": 16,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "K05"
+        },
+	{
+	  "channel_name": "K01",
+	  "pin_id": 29,
+	  "pin_delay": 500,
+	  "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+	  "ref_resistance": 10000,
+	  "ref_voltage": 3.3,
+	  "sensor_id": "K01"
+	},
+	{
+	  "channel_name": "K02",
+	  "pin_id": 11,
+	  "pin_delay": 500,
+	  "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+	  "ref_resistance": 10000,
+	  "ref_voltage": 3.3,
+	  "sensor_id": "K02"
+	},
+	{
+	  "channel_name": "K03",
+	  "pin_id": 34,
+	  "pin_delay": 500,
+	  "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+	  "ref_resistance": 10000,
+	  "ref_voltage": 3.3,
+	  "sensor_id": "K03"
+	},
+	{
+	  "channel_name": "K04",
+	  "pin_id": 33,
+	  "pin_delay": 500,
+	  "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+	  "ref_resistance": 10000,
+	  "ref_voltage": 3.3,
+	  "sensor_id": "K04"
+	},
+	{
+	  "channel_name": "K06",
+	  "pin_id": 31,
+	  "pin_delay": 500,
+	  "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+	  "ref_resistance": 10000,
+	  "ref_voltage": 3.3,
+	  "sensor_id": "K06"
+	}
+      ]
+    }
+  ]
+}
