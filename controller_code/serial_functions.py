@@ -289,7 +289,8 @@ def read_to_file_for_duration(dev,
     last_print = -print_every
     with open(file_name, "a") as fdout:
         fdout.write("TIME,CH,ADC\n")
-        time_now = 0
+    time_now = 0
+    try:
         while time_now - start_time < target_duration:
             time_now = time.time()
             elapsed = time_now - start_time
@@ -312,9 +313,14 @@ def read_to_file_for_duration(dev,
                 for j in range(len(val_list)):
                     if not(bad_channels[j]):
                         ch_int, time_int, adc_int = val_list[j]
-                        fdout.write(f"{time_int},{ch_int},{adc_int}\n")
+                        with open(file_name, "a") as fdout:
+                            fdout.write(f"{time_int},{ch_int},{adc_int}\n")
             else:
                 time.sleep(sleep_on_empty)
+    except KeyboardInterrupt:
+        if verbose:
+            print()
+            print("Terminated early due to keyboard interrupt.")
     num_samples = i
     end_time = time.time()
     duration = end_time-start_time
@@ -346,35 +352,35 @@ def read_indefinite(
     last_print = -print_every
     with open(file_name, "a") as fdout:
         fdout.write("TIME,CH,ADC\n")
-        time_now = 0
-        try:
-            while True:
-                time_now = time.time()
-                elapsed = time_now - start_time
-                if elapsed > last_print + print_every:
-                    if verbose:
-                        print(f"\r{elapsed: 4.1f}s :: {i} lines :: {bad_line_counter} fails", end="", sep="")
-                    last_print += print_every
-                rl = dev_read_until(dev)
-                if len(rl):
-                    val_list = parse_readline(rl)
-                    i += 1
-                    # if len(val_list) != len(pins):
-                    bad_channels = [not(val_list[i][0] in pins) for i in range(len(val_list))]
-                    if np.any(bad_channels):
-                        bad_line_counter += 1
-                        
-                        if verbose:
-                            print(f"\nBad Line: {rl}")
+    time_now = 0
+    try:
+        while True:
+            time_now = time.time()
+            elapsed = time_now - start_time
+            if elapsed > last_print + print_every:
+                if verbose:
+                    print(f"\r{elapsed: 4.1f}s :: {i} lines :: {bad_line_counter} fails", end="", sep="")
+                last_print += print_every
+            rl = dev_read_until(dev)
+            if len(rl):
+                val_list = parse_readline(rl)
+                i += 1
+                bad_channels = [not(val_list[i][0] in pins) for i in range(len(val_list))]
+                if np.any(bad_channels):
+                    bad_line_counter += 1
                     
-                    for j in range(len(val_list)):
-                        if not(bad_channels[j]):
-                            ch_int, time_int, adc_int = val_list[j]
+                    if verbose:
+                        print(f"\nBad Line: {rl}")
+                
+                for j in range(len(val_list)):
+                    if not(bad_channels[j]):
+                        ch_int, time_int, adc_int = val_list[j]
+                        with open(file_name, "a") as fdout:
                             fdout.write(f"{time_int},{ch_int},{adc_int}\n")
-                else:
-                    time.sleep(sleep_on_empty)
-        except KeyboardInterrupt:
-            pass
+            else:
+                time.sleep(sleep_on_empty)
+    except KeyboardInterrupt:
+        pass
     num_samples = i
     end_time = time.time()
     duration = end_time-start_time
