@@ -108,8 +108,22 @@ def load_dataframe(fdin):
 def adc_to_voltage(dataframe, max_voltage, bit_resolution):
     return dataframe.assign(voltage = dataframe["ADC"] * max_voltage / 2**bit_resolution)
 
-def thermisor_resistance_from_voltage(voltage_array, ref_resistance, ref_voltage):
-    return ref_resistance * voltage_array / (ref_voltage- voltage_array)
+def thermistor_resistance_from_voltage(voltage_array, ref_resistance, ref_voltage):
+    
+    temp_voltage_array = np.asarray(voltage_array, dtype=float)
+    ret = np.zeros_like(temp_voltage_array, dtype=float)
+    
+    cond1 = temp_voltage_array == 0
+    ret[cond1] = 0
+    
+    cond2 = temp_voltage_array == ref_voltage
+    ret[cond2] = np.inf
+    
+    cond3 = np.logical_not(np.logical_or(cond1, cond2))
+    ret[cond3] = ref_resistance / (ref_voltage/temp_voltage_array[cond3] - 1)
+    
+    # v = ref_resistance / (ref_voltage/voltage_array - 1)
+    return ret
 
 def thermistor_temp_C_from_resistance(resistance, fit_degree=6, thermistor_type="micro_betachip"):
     if thermistor_type == "unknown":
@@ -152,7 +166,7 @@ def process_data_from_path(data_file_path,
                     thermistor_type = "unknown"
                 cond = data_dict[ch_id]["voltage"] > 0
                 data_dict[ch_id] = data_dict[ch_id].loc[cond]
-                resistance = thermisor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
+                resistance = thermistor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
                                                                channel_settings[ch_id]["ref_resistance"], 
                                                                channel_settings[ch_id]["ref_voltage"])
                 if correct_on_sensor_id:
