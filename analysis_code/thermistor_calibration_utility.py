@@ -44,30 +44,51 @@ def darken_color(color_code, proportion=0.5):
     return mix_colors(color_code, "#000000", proportion)
 
 
-calibrations_file_path = ("/home/stellarremnants/muDAQ/"
-                          "combined_calibration_recirculating_water_bath_2022-07-18.csv")
 
-calibrate_setup = "joseph"
+# calibrate_setup = "joseph"
 # calibrate_setup = "kavya"
+calibrate_setup = "solderboard"
+orig_fit_level = 3
+new_fit_level = orig_fit_level
 
 if calibrate_setup.lower() == "joseph":
     
     # factory_file = "thermistor_factory_calibration_data.csv"
+    calibrations_file_path = ("/home/stellarremnants/muDAQ/"
+                              "combined_calibration_recirculating_water_bath_2022-07-18.csv")
     
     file_path_prefix = "thermistor_data/joseph_water_bath_calibration/jwbc_"
 
     sensor_type = "micro_betachip"
     
     pin_ids = [11, 16, 29, 33, 34]
+    T_range = [25, 55]
+    step_size = 1
     
 elif calibrate_setup.lower() == "kavya":
     
     file_path_prefix = "thermistor_data/kavya_water_bath_calibration/kwbc_"
+    calibrations_file_path = ("/home/stellarremnants/muDAQ/"
+                              "combined_calibration_recirculating_water_bath_2022-07-18.csv")
 
     sensor_type = "amphenol"
     
     pin_ids = [13, 16, 29, 11, 34, 33, 31]
+    T_range = [25, 55]
+    step_size = 1
     
+elif calibrate_setup.lower() == "solderboard":
+    
+    file_path_prefix = "thermistor_data/solderboard_prototype_water_bath_calibration/sbwbc_"
+    calibrations_file_path = ("/home/stellarremnants/muDAQ/"
+                              "controller_code/water_bath_calibrations/"
+                              "solderboard_calibrations.csv")
+
+    sensor_type = "amphenol"
+    
+    pin_ids = [29, 11, 34, 33, 16, 31, 13]
+    T_range = [30, 40]
+    step_size = 2
     
 else:
     raise Exception(f"Unrecognized calibrate_setup key: {calibrate_setup}")
@@ -153,10 +174,13 @@ resistances = resistances.assign(**{T1_key:s1, T2_key:s2, TC_key:cr})
 resistances = resistances.sort_values(by=TC_key, ignore_index=True)
 
 # %%
-T_range = [25, 55]
-T_size = T_range[1] - T_range[0] + 1
-
-counts, edges = np.histogram(resistances[TC_key], bins=T_size, range=T_range)
+# T_range = [25, 55]
+# T_range =[int(np.min(resistances[TC_key])), int(np.max(resistances[TC_key]))]
+# T_size = T_range[1] - T_range[0] + 1
+offset = 0.5
+# counts, edges = np.histogram(resistances[TC_key], bins=T_size, range=T_range)
+edges = np.arange(T_range[0], T_range[1]+2*step_size, step=step_size, ) - offset
+counts, _ = np.histogram(resistances[TC_key], bins=edges)
 columns = []
 for col in resistances.columns:
     # col = str(col)
@@ -215,7 +239,6 @@ min_res_error = 3.69923722e-01
 # %%
 # R1 = R_of_T_factory(T1)
 NROWS = 3
-orig_fit_level = 6
 
 lw = 0.75
 marker="."
@@ -313,8 +336,6 @@ plt.subplots_adjust(
 
 # %%
 NROWS = 2
-orig_fit_level = 6
-new_fit_level = orig_fit_level
 
 lw = 0.75
 marker="."
@@ -360,8 +381,10 @@ for i in range(NUM_CHANNELS):
         color = COLOR_CYCLE[j%len(COLOR_CYCLE)]
         
         uncorrected_misfit = data_series[j]-uncorrected_T_of_res
-        
-        fit_params, covar = polynomial_fit(res, data_series[j], max_pow=new_fit_level)
+        cond = np.isfinite(res)
+        fit_res = res[cond]
+        fit_T = data_series[j][cond]
+        fit_params, covar = polynomial_fit(fit_res, fit_T, max_pow=new_fit_level)
         corrected_data = polynomial_variable(res, *fit_params)
         corrected_misfit = data_series[j]-corrected_data
         err_max = np.max(abs(corrected_misfit))
