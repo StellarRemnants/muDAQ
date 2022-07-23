@@ -330,8 +330,8 @@ plt.subplots_adjust(
     right=0.95,
     top=0.9,
     bottom=0.1,
-    hspace=0.2,
-    wspace=0.05,
+    hspace=0.3,
+    wspace=0.15,
     )
 
 # %%
@@ -341,7 +341,7 @@ lw = 0.75
 marker="."
 ms = 5
 
-fig, axes = plt.subplots(nrows=NROWS, ncols=NUM_CHANNELS, sharex='row', sharey='row')
+fig, axes = plt.subplots(nrows=NROWS, ncols=NUM_CHANNELS, sharex=True, sharey='row')
 fig.set_size_inches(np.asarray([1920, 1080])/fig.dpi)
 
 
@@ -359,7 +359,7 @@ for i in range(NUM_CHANNELS):
     ch_err_key = f"{ch_id}_err"
     
     upax.set_title(f"Channel: {ch_id}")
-    upax.set_xlabel(rf"Channel {ch_id} Orig. T [$^\circ$C]")
+    downax.set_xlabel(rf"Channel {ch_id} Orig. T [$^\circ$C]")
     
     res = data_means[ch_id]
     res_err = data_means[ch_err_key]
@@ -428,8 +428,8 @@ plt.subplots_adjust(
     right=0.95,
     top=0.9,
     bottom=0.1,
-    hspace=0.2,
-    wspace=0.05,
+    hspace=0.0,
+    wspace=0.15,
     )
     
         
