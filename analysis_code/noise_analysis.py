@@ -15,8 +15,9 @@ from file_read_functions import process_data_from_path
 
 # data_file_path = ("/home/stellarremnants/muDAQ/analysis_code/thermistor_data/kavya_water_bath_calibration/kwbc_0000.csv")
 # data_file_path = ("/home/stellarremnants/muDAQ/analysis_code/thermistor_data/joseph_water_bath_calibration/jwbc_0100.csv")
-data_file_path = ("/home/stellarremnants/muDAQ/analysis_code/thermistor_data/s"
-"olderboard_prototype_water_bath_calibration/sbwbc_0000.csv")
+data_file_path = ("/home/stellarremnants/muDAQ/analysis_code/thermistor_data/solderboard_prototype_water_bath_calibration/sbwbc_0021.csv")
+# data_file_path = ("/home/stellarremnants/muDAQ/analysis_code/"
+#                   "thermistor_data/noise_examination_0013.csv")
 
 data_dict, device_dict, start_datetime = process_data_from_path(data_file_path, correct_on_sensor_id=False)
 
