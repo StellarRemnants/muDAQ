@@ -105,7 +105,7 @@ def prepare_file(data_file_path, device, verbose = True):
     
     
     with open(file_abspath, "w") as fdout:
-        now_datetime = datetime.datetime.utcnow()
+        now_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
         fdout.write(f"UTC datetime,{now_datetime.ctime()}\n")
         fdout.write(f"UTC timestamp,{now_datetime.timestamp()}\n")
         dev_json= device.to_json(indent=2)
