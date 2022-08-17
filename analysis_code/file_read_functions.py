@@ -11,7 +11,10 @@ import numpy as np
 import json
 import datetime
 
-from thermistor_correction_library import correct_resistance
+from thermistor_correction_library import (
+    correct_resistance_to_resistance,
+    correct_resistance_to_temperature
+    )
 
 FIT_DICT = {
     "micro_betachip":{
@@ -144,6 +147,7 @@ def separate_channels(dataframe):
 def process_data_from_path(data_file_path,
                            fit_degree = 6,
                            correct_on_sensor_id = True,
+                           correct_R_to_T_directly=True,
                            ):
     fdin, start_datetime, device_dict = load_preamble(data_file_path)
     dataframe = load_dataframe(fdin)
@@ -169,14 +173,27 @@ def process_data_from_path(data_file_path,
                 resistance = thermistor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
                                                                channel_settings[ch_id]["ref_resistance"], 
                                                                channel_settings[ch_id]["ref_voltage"])
+                
                 if correct_on_sensor_id:
                     sensor_id = channel_settings[ch_id]["sensor_id"]
                     if sensor_id.lower() != "unknown":
-                        resistance = correct_resistance(resistance, sensor_id)
+                        if correct_R_to_T_directly:
+                            temp_C = correct_resistance_to_temperature(resistance, sensor_id)
+                        else:
+                            resistance = correct_resistance_to_resistance(resistance, sensor_id)
+                            temp_C = thermistor_temp_C_from_resistance(resistance, 
+                                                                       fit_degree=fit_degree, 
+                                                                       thermistor_type=thermistor_type)
+                    else:
+                        temp_C = thermistor_temp_C_from_resistance(resistance, 
+                                                                   fit_degree=fit_degree, 
+                                                                   thermistor_type=thermistor_type)
+                else:
+                    temp_C = thermistor_temp_C_from_resistance(resistance, 
+                                                               fit_degree=fit_degree, 
+                                                               thermistor_type=thermistor_type)
+                    
                 data_dict[ch_id] = data_dict[ch_id].assign(resistance=resistance).reset_index(drop=True)
-                temp_C = thermistor_temp_C_from_resistance(resistance, 
-                                                           fit_degree=fit_degree, 
-                                                           thermistor_type=thermistor_type)
                 # print(ch_id)
                 # print(thermistor_type)
                 # print(temp_C)

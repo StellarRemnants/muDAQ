@@ -19,7 +19,7 @@
         {
           "channel_name": "Basal Inner",
           "pin_id": 29,
-          "pin_delay": 50000,
+          "pin_delay": 15000,
           "sensor_type": "thermistor",
           "thermistor_type": "amphenol",
           "ref_resistance": 10000,
@@ -29,7 +29,7 @@
         {
           "channel_name": "Hotspot Left",
           "pin_id": 11,
-          "pin_delay": 50000,
+          "pin_delay": 15000,
           "sensor_type": "thermistor",
           "thermistor_type": "amphenol",
           "ref_resistance": 10000,
@@ -39,7 +39,7 @@
         {
           "channel_name": "Hotspot Middle",
           "pin_id": 34,
-          "pin_delay": 50000,
+          "pin_delay": 15000,
           "sensor_type": "thermistor",
           "thermistor_type": "amphenol",
           "ref_resistance": 10000,
@@ -49,7 +49,7 @@
         {
           "channel_name": "Interior Upper",
           "pin_id": 33,
-          "pin_delay": 50000,
+          "pin_delay": 15000,
           "sensor_type": "thermistor",
           "thermistor_type": "amphenol",
           "ref_resistance": 10000,
@@ -59,7 +59,7 @@
         {
           "channel_name": "Interior Lower",
           "pin_id": 16,
-          "pin_delay": 50000,
+          "pin_delay": 15000,
           "sensor_type": "thermistor",
           "thermistor_type": "amphenol",
           "ref_resistance": 10000,
@@ -69,7 +69,7 @@
         {
           "channel_name": "Hotspot Right",
           "pin_id": 31,
-          "pin_delay": 50000,
+          "pin_delay": 15000,
           "sensor_type": "thermistor",
           "thermistor_type": "amphenol",
           "ref_resistance": 10000,
@@ -79,7 +79,7 @@
         {
           "channel_name": "Basal Outer",
           "pin_id": 13,
-          "pin_delay": 50000,
+          "pin_delay": 15000,
           "sensor_type": "thermistor",
           "thermistor_type": "amphenol",
           "ref_resistance": 10000,

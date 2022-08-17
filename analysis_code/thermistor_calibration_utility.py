@@ -45,9 +45,9 @@ def darken_color(color_code, proportion=0.5):
 
 
 
-# calibrate_setup = "joseph"
+calibrate_setup = "joseph"
 # calibrate_setup = "kavya"
-calibrate_setup = "solderboard"
+# calibrate_setup = "solderboard"
 orig_fit_level = 3
 new_fit_level = orig_fit_level
 
@@ -341,8 +341,25 @@ lw = 0.75
 marker="."
 ms = 5
 
+print_sources = ["TM"]
+
 fig, axes = plt.subplots(nrows=NROWS, ncols=NUM_CHANNELS, sharex=True, sharey='row')
 fig.set_size_inches(np.asarray([1920, 1080])/fig.dpi)
+
+channel_names = {}
+for pin_id in data_dict.keys():
+    matches = []
+    for ch_dict in device_dict["channel_list"]:
+        if ch_dict['pin_id'] == pin_id:
+            matches.append(ch_dict["channel_name"])
+            
+    if len(matches) < 1:
+        print(f"No matches found for channel {pin_id}")
+    elif len(matches) > 1:
+        print(f"Multiple matches found for channel {pin_id}")
+        
+    else:
+        channel_names[pin_id] = matches[0]
 
 
 for i in range(NUM_CHANNELS):
@@ -351,7 +368,7 @@ for i in range(NUM_CHANNELS):
     
     print(
         "---\n"
-        f"CH: {pin_ids[i]}\n"
+        f"CH: {pin_ids[i]} :: \"{channel_names[pin_ids[i]]}\"\n"
         "---"
         )
     
@@ -389,10 +406,14 @@ for i in range(NUM_CHANNELS):
         corrected_misfit = data_series[j]-corrected_data
         err_max = np.max(abs(corrected_misfit))
         
-        print(f"Source: {data_labels[j]}")
-        print(f"Fit:\n{fit_params}")
-        print(f"Max Misfit: {err_max}")
-        print()
+        if data_labels[j] in print_sources:
+            print(f"Source: {data_labels[j]}")
+            print(f"Fit:\n[",end="")
+            for fit in fit_params:
+                print(f"{fit:.7e}, ", end="")
+            print("]")
+            print(f"Max Misfit: {err_max}")
+            print()
         
         upax.plot(
             uncorrected_T_of_res, uncorrected_misfit,

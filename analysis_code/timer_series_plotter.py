@@ -28,7 +28,10 @@ if __name__ == "__main__":
     else:
         file_path = argv[1]
         
-    data_dict, dev_opts, start_datetime = process_data_from_path(file_path, correct_on_sensor_id=False)
+    print(f"Loading file: {file_path}")
+    data_dict, dev_opts, start_datetime = process_data_from_path(file_path, 
+                                                                 correct_on_sensor_id=True,
+                                                                 correct_R_to_T_directly=True)
     
     channel_names = {}
     for pin_id in data_dict.keys():
@@ -54,10 +57,19 @@ if __name__ == "__main__":
     compressed_dict = {}
     init_time = np.min([np.min(data_dict[ch_id]["TIME"][:10]) for ch_id in pin_ids]) * 1e-6
     
-    BIN_TIME = 10 #s
+    BIN_TIME = 5 #s
+    
+    # channel_ids = np.asarray([channel_names[ch_id] for ch_id in pin_ids])
+    channel_ids_list = np.asarray([(ch_id, channel_names[ch_id]) for ch_id in pin_ids], 
+                                  dtype=object)
+    channel_ids_list = channel_ids_list[channel_ids_list[:,1].argsort()]
+    
+    print(f"Binning time series data with bin size: {BIN_TIME:.2f}s")
+    print()
+    
     for i in range(NUM_PINS):
-        print(f"PIN: {i+1}/{NUM_PINS}")
-        ch_id = pin_ids[i]
+        print(f"Channel: {i+1}/{NUM_PINS}")
+        ch_id, channel_name = channel_ids_list[i]
         dataframe = data_dict[ch_id]
         time = dataframe["TIME"] * 1e-6 - init_time
         
@@ -92,14 +104,14 @@ if __name__ == "__main__":
     fig, axes = plt.subplots(nrows=1, sharex=True)
     axes = list([axes])
     
-    
+    print("Plotting")
     for i in range(NUM_PINS):
-        print(f"PIN: {i+1}/{NUM_PINS}")
-        ch_id = pin_ids[i]
+        # print(f"PIN: {i+1}/{NUM_PINS}")
+        ch_id, channel_name = channel_ids_list[i]
         
         time, temp, temp_error = compressed_dict[ch_id]
         
-        axes[0].errorbar(time, temp, yerr=temp_error, label=channel_names[ch_id],
+        axes[0].errorbar(time, temp, yerr=temp_error, label=channel_name,
                          ls="", marker="."
                          )
     
