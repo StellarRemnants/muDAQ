@@ -11,6 +11,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
+from scipy.signal import savgol_filter
+
+MAX_TIME = 2**32
+
 if __name__ == "__main__":
     
     DEFAULT_FILE_PATH = ("/home/stellarremnants/muDAQ/analysis_code/"
@@ -53,6 +57,11 @@ if __name__ == "__main__":
         ch_id = pin_ids[i]
         dataframe = data_dict[ch_id]
         time = dataframe["TIME"] * 1e-6 - init_time
+        
+        rollover_cond = np.asarray([False, *(np.diff(time) < -10)])
+        for j in np.arange(time.size)[rollover_cond]:
+            time[j:] += MAX_TIME*1e-6
+        
         temp = dataframe["temp_C"]
         axes[0].plot(time, temp, label=channel_names[ch_id])
     
