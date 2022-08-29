@@ -10,6 +10,9 @@ import json
 import time
 import datetime
 import os
+import numpy as np
+import threading
+
 from json_classes import program_settings
 from serial_functions import (
     prepare_serial_device,
@@ -17,9 +20,12 @@ from serial_functions import (
     send_pin_count,
     send_pins,
     send_pin_delays,
-    read_to_file_for_duration,
+    # read_to_file_for_duration,
     send_restart_signal,
-    read_indefinite,
+    # read_indefinite,
+    # parse_readline,
+    bytestring_to_int,
+    dev_read_until,
     )
 # %%
 
@@ -74,7 +80,7 @@ def restart_device(dev, program, verbose=True):
         print("Program successfully terminated.")
         
         
-def prepare_file(data_file_path, device, verbose = True):
+def prepare_file(data_file_path, program, verbose = True):
     file_abspath = os.path.abspath(data_file_path)
     
     
@@ -108,88 +114,423 @@ def prepare_file(data_file_path, device, verbose = True):
         now_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
         fdout.write(f"UTC datetime,{now_datetime.ctime()}\n")
         fdout.write(f"UTC timestamp,{now_datetime.timestamp()}\n")
-        dev_json= device.to_json(indent=2)
+        prog_json= program.to_json(indent=2)
         fdout.write("`---`,,\n")
-        fdout.write(dev_json)
+        fdout.write(prog_json)
         fdout.write("\n")
         fdout.write("`---`,,\n")
+        fdout.write("COMPTIME,DEVID,TIME,CH,ADC\n")
         
-def collect_data_according_to_file(json_file_path, verbose=True):
-    program = get_program_settings(json_file)
-    for i in range(len(program.device_list)):
-        device = get_device_settings(program, device_index=i)
-        #TODO: Non-blocking read implementation for multiple devices
-        #TODO: Time synchronization for multiple devices
-        dev, pins, pin_delays = prepare_device_for_read(device, verbose=verbose)
-        dev.reset_output_buffer()
-        for i in range(10):
-            rl = dev.readline()
-            if len(rl):
-                if verbose:
-                    # print(f"Line: {rl}")
-                    pass
-        time.sleep(1)
+# def collect_data_according_to_file(json_file_path, verbose=True):
+#     program = get_program_settings(json_file)
+#     for i in range(len(program.device_list)):
+#         device = get_device_settings(program, device_index=i)
+#         #TODO: Non-blocking read implementation for multiple devices
+#         #TODO: Time synchronization for multiple devices
+#         dev, pins, pin_delays = prepare_device_for_read(device, verbose=verbose)
+#         dev.reset_output_buffer()
+#         for i in range(10):
+#             rl = dev.readline()
+#             if len(rl):
+#                 if verbose:
+#                     # print(f"Line: {rl}")
+#                     pass
+#         time.sleep(1)
         
-        if verbose:
-            print("Reading for duration...")
+#         if verbose:
+#             print("Reading for duration...")
             
-        data_file_prefix = device.data_file_prefix
-        collection_mode = device.collection_mode.lower()
+#         data_file_prefix = device.data_file_prefix
+#         collection_mode = device.collection_mode.lower()
         
-        valid_name = False
-        for i in range(10000):
-            data_file_path = f"{data_file_prefix}_{i:04d}.csv"
-            if os.path.exists(data_file_path):
-                pass
-            else:
-                valid_name = True
-                break
-        if not(valid_name):
-            if verbose:
-                print("Maximum number of similarly named files reached for data_file_prefix "
-                  f"\"{data_file_prefix}\". Please use a new data_file_prefix in your .json control file.")
+#         valid_name = False
+#         for i in range(10000):
+#             data_file_path = f"{data_file_prefix}_{i:04d}.csv"
+#             if os.path.exists(data_file_path):
+#                 pass
+#             else:
+#                 valid_name = True
+#                 break
+#         if not(valid_name):
+#             if verbose:
+#                 print("Maximum number of similarly named files reached for data_file_prefix "
+#                   f"\"{data_file_prefix}\". Please use a new data_file_prefix in your .json control file.")
             
-        else:
-            if verbose:
-                print(f"Preparing file: \"{data_file_path}\"")
-            prepare_file(data_file_path, device)
-            if verbose:
-                print("Running data collection procedure \"duration\"...")
+#         else:
+#             if verbose:
+#                 print(f"Preparing file: \"{data_file_path}\"")
+#             prepare_file(data_file_path, device)
+#             if verbose:
+#                 print("Running data collection procedure \"duration\"...")
             
             
-            if collection_mode == "duration":
-                num_samples, duration, bad_line_counter = read_to_file_for_duration(dev,
-                                      pins,
-                                      file_name = data_file_path,
-                                      target_duration = device.collection_duration,
-                                      ignore_first_lines = device.ignore_first_lines,
-                                      sleep_on_empty = device.delay_on_empty,
-                                      verbose=verbose,
-                                      )
-            elif collection_mode == "indefinite":
-                num_samples, duration, bad_line_counter = read_indefinite(dev,
-                                      pins,
-                                      file_name = data_file_path,
-                                      ignore_first_lines = device.ignore_first_lines,
-                                      sleep_on_empty = device.delay_on_empty,
-                                      verbose=verbose,
-                                      )
-            else:
-                raise NotImplementedError(f"Collection mode \"{collection_mode}\" not yet implemented")
+#             if collection_mode == "duration":
+#                 num_samples, duration, bad_line_counter = read_to_file_for_duration(dev,
+#                                       pins,
+#                                       file_name = data_file_path,
+#                                       target_duration = device.collection_duration,
+#                                       ignore_first_lines = device.ignore_first_lines,
+#                                       sleep_on_empty = device.delay_on_empty,
+#                                       verbose=verbose,
+#                                       )
+#             elif collection_mode == "indefinite":
+#                 num_samples, duration, bad_line_counter = read_indefinite(dev,
+#                                       pins,
+#                                       file_name = data_file_path,
+#                                       ignore_first_lines = device.ignore_first_lines,
+#                                       sleep_on_empty = device.delay_on_empty,
+#                                       verbose=verbose,
+#                                       )
+#             else:
+#                 raise NotImplementedError(f"Collection mode \"{collection_mode}\" not yet implemented")
     
-            restart_device(dev, program, verbose=verbose)
+#             restart_device(dev, program, verbose=verbose)
 
 # %%
+
+    
+    
+def validate_device_list(program):
+    device_list = [get_device_settings(program, device_index=i) for i in range(len(program.device_list))]
+    ports = np.asarray([device.port for device in device_list])
+    unique_ports = np.unique(ports)
+    counts = np.asarray([ports[ports==port].size for port in unique_ports])
+    duplicates = False
+    for i in range(counts.size):
+        if counts[i] != 1:
+            duplicates = True
+            print(f"Duplicate port: {unique_ports[i]} ({counts[i]} found)")
+    if duplicates:
+        raise Exception(f"Duplicate port(s) found. Unable to safely continue. [{', '.join(unique_ports[counts > 1])}]")
+        
+        
+    for port in unique_ports:
+        if not(os.path.exists(port)):
+            raise Exception(f"Port is not connected! \"{port}\"")
+
+def allocate_data_file_path(program):
+    data_file_prefix = program.data_file_prefix
+    
+    valid_name = False
+    for i in range(10000):
+        data_file_path = f"{data_file_prefix}_{i:04d}.csv"
+        if os.path.exists(data_file_path):
+            pass
+        else:
+            valid_name = True
+            break
+    if not(valid_name):
+        raise Exception("Maximum number of similarly named files reached for data_file_prefix "
+          f"\"{data_file_prefix}\". Please use a new data_file_prefix in your .json control file.")
+    else:
+        
+        prepare_file(data_file_path, program,verbose=verbose)
+        return data_file_path
+    
+def create_file_lock():
+    file_lock = threading.Lock()
+    return file_lock
+
+## DEFINE START FUNCTION
+def collection_start_fnc(data_file_path, program, verbose=True):
+    
+    ## LOAD DEVICES
+    start_time = None
+    device_list = []
+    dev_args_list = []
+    device_count = len(program.device_list)
+    
+    for i in range(device_count):
+        if verbose:
+            print(f"Registering device {i} ...")
+        device = get_device_settings(program, device_index=i)
+        device_list.append(device)
+        dev, pins, pin_delays = prepare_device_for_read(device, verbose=verbose)
+        dev_args_list.append([dev, pins, pin_delays])
+    
+    ## ANNOUNCE START CONDITIONS
+    if verbose:
+        for i in range(device_count):
+            device = device_list[i]
+            collection_mode = device.collection_mode.lower()
+            print(f"Dev {i:2d} -- MODE: {collection_mode} -- NAME: {device.device_name}")
+    
+    ## GET START TIME
+    start_time = time.time()
+    
+    return start_time, device_list, dev_args_list, device_count
+
+## DEFINE COLLECTION END FUNCTION
+def collection_end_fnc(dev_args_list, end_array, program, verbose):
+    for i in range(end_array.size):
+        if verbose:
+            print(f"Restarting serial device {i} ... ")
+        dev, pins, pin_delays = dev_args_list[i]
+        restart_device(dev, program, verbose=verbose)
+        end_array[i] = False
+        
+    
+## DEFINE READ FUNCTION
+def read_from_device(dev):
+    return dev_read_until(dev)
+
+
+def collect_duration_condition(start_time, duration, *args, **kwargs):
+    """
+    Returns True to continue collection
+    Returns False to stop collection
+    """
+    return (time.time() - start_time) < duration
+
+def collect_indefinite_condition(*args, **kwargs):
+    return True
+
+def parse_readline(rl):
+    pods = [a.split(b",") for a in rl.split(b";")][:-1]
+    ret = []
+    for pod in pods:
+        if len(pod) != 3:
+            pass
+        else:
+            ret.append([bytestring_to_int(a) for a in pod])
+    return ret
+
+## DEFINE THREAD FUNCTION(FILE_PATH, DEVICE, RELEVANT_ARGS)    
+def thread_fnc(
+        data_file_path, 
+        device, 
+        dev_args, 
+        device_id, 
+        start_array, 
+        end_array, 
+        start_time,
+        file_lock,
+        verbose=True, 
+        sleep_on_empty = 0.01,
+               ):
+    # print(f"DEV_ARGS={dev_args}")
+    dev, pins, pin_delays = dev_args
+    collection_mode = device.collection_mode.lower()
+    ## SETUP
+    ## EXECUTION CONTINUE CONDITION
+    if collection_mode == "duration":
+        collection_condition = collect_duration_condition
+    elif collection_mode == "indefinite":
+        collection_condition = collect_indefinite_condition
+    else:
+        raise ValueError(f"Unrecognized collection mode: {collection_mode}")
+    
+    collection_kwargs = {
+        "start_time": start_time,
+        "duration": device.collection_duration,
+        "count": device.collection_count,
+        }
+    
+    ## WAIT TO START UNTIL ALL THREADS READY
+    start_array[device_id] = 0
+    while np.sum(start_array):
+        time.sleep(sleep_on_empty)
+    
+    ## WHILE CONDITION
+    # print(f"collection_condition(**collection_kwargs)={collection_condition(**collection_kwargs)}")
+    # print(f"end_array[device_id]={end_array[device_id]}")
+    while collection_condition(**collection_kwargs) and end_array[device_id]:
+        ## GET LINE FROM DEVICE
+        rl = read_from_device(dev)
+        # print(rl)
+        comptime = time.time()
+        if len(rl):
+            val_list = parse_readline(rl)
+            # print(val_list)
+            ## COMPUTER TIMESTAMP
+            ## ACQUIRE FILE_LOCK
+            file_lock.acquire()
+            ## OPEN FILE APPEND
+            with open(data_file_path, "a") as fdout:
+            ## WRITE TO FILE
+                ## "COMPTIME,DEVID,TIME,CH,ADC\n"
+                for ch_int, time_int, val_int in val_list:
+                    fdout.write(
+                        f"{comptime},{device_id},{ch_int},{time_int},{val_int}\n"
+                        )
+            ## RELEASE FILE_LOCK
+            file_lock.release()
+        else:
+            time.sleep(sleep_on_empty)
+        
+    if verbose:
+        print(f"DEVICE {device_id} Terminating collection")
+
+## CREATE THREADS
+def create_threads(
+        data_file_path, 
+        device_list, 
+        dev_args_list, 
+        start_array, 
+        end_array, 
+        start_time,
+        file_lock,
+        verbose=True, 
+        sleep_on_empty = 0.01,):
+    
+    threads = []
+    for i in range(len(device_list)):
+        device = device_list[i]
+        dev_args = dev_args_list[i]
+        args = {
+            "data_file_path":data_file_path, 
+            "device":device, 
+            "dev_args":dev_args, 
+            "device_id":i, 
+            "start_array":start_array, 
+            "end_array":end_array, 
+            "start_time":start_time,
+            "verbose":verbose, 
+            "sleep_on_empty":sleep_on_empty,
+            "file_lock":file_lock,
+            }
+        thread = threading.Thread(target=thread_fnc, kwargs=args)
+        threads.append(thread)
+    return threads
+
+## START THREADS
+def start_threads(threads):
+    for thread in threads:
+        thread.start()
+
+## MONITOR THREADS
+def monitor_threads(threads, end_array, verbose=True):
+    try:
+        while np.any([thread.is_alive() for thread in threads]):
+            pass
+    except KeyboardInterrupt:
+        if verbose:
+            print("KeyboardInterrupt received. Terminating data collection ... ")
+        for i in range(end_array.size):
+            end_array[i] = 0
+    finally:
+        if verbose:
+            print("Data collection terminated. Cleaning up...")
+            
+    
+
+## CLEANUP
+    ## UNLOAD AND RESET DEVICES
+
+#%%
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) >= 2:
         json_file = sys.argv[1]
     else:
-        json_file = "TEMPLATE.json"
+        json_file = "multi_device_test.json"
     
     print("========================================================")
     print("Using file: ")
     print(f"\t\"{json_file}\"")
     print("========================================================")
-    collect_data_according_to_file(json_file)
+    # collect_data_according_to_file(json_file)
+    verbose = True
+    # json_file = "/home/stellarremnants/muDAQ/controller_code/multi_device_test.json"
+    
+    ## GET DATA FROM JSON
+    program = get_program_settings(json_file)
+    validate_device_list(program)
+    data_file_path = allocate_data_file_path(program)
+    
+    start_time, device_list, dev_args_list, device_count = collection_start_fnc(data_file_path, program, verbose=True)
+    
+    file_lock = create_file_lock()
+    start_array = np.ones(device_count)
+    end_array = np.ones(device_count)
+    
+    threads = create_threads(data_file_path, 
+                              device_list, 
+                              dev_args_list, 
+                              start_array, 
+                              end_array, 
+                              start_time,
+                              file_lock,
+                              )
+    start_threads(threads)
+    monitor_threads(threads, end_array)
+    collection_end_fnc(dev_args_list, end_array, program, verbose)
+    
+# %%
+
+# def read_to_file_for_duration(dev,
+#                               pins,
+#                               file_name = "temp_data.csv",
+#                               target_duration = 10,
+#                               ignore_first_lines = 10,
+#                               sleep_on_empty = 0.1,
+#                               verbose=True,
+#                               ):    
+#     i = 0
+#     bad_line_counter = 0
+#     dev.reset_input_buffer()
+#     dev.reset_output_buffer()
+#     dev.flushInput()
+#     dev.flushOutput()
+    
+#     for j in range(ignore_first_lines):
+#         dev_read_until(dev)        
+            
+    
+#     start_time = time.time()
+#     print_every = .1
+#     last_print = -print_every
+#     with open(file_name, "a") as fdout:
+#         fdout.write("TIME,CH,ADC\n")
+#     time_now = 0
+#     try:
+#         while time_now - start_time < target_duration:
+#             time_now = time.time()
+#             elapsed = time_now - start_time
+#             if elapsed > last_print + print_every:
+#                 if verbose:
+#                     print(f"\r{elapsed: 4.1f}s / {target_duration}s :: {i} lines :: {bad_line_counter} fails", end="", sep="")
+#                 last_print += print_every
+#             rl = dev_read_until(dev)
+#             if len(rl):
+#                 val_list = parse_readline(rl)
+#                 i += 1
+#                 # if len(val_list) != len(pins):
+#                 bad_channels = [not(val_list[i][0] in pins) for i in range(len(val_list))]
+#                 if np.any(bad_channels):
+#                     bad_line_counter += 1
+                    
+#                     if verbose:
+#                         print(f"\nBad Line: {rl}")
+                
+#                 for j in range(len(val_list)):
+#                     if not(bad_channels[j]):
+#                         ch_int, time_int, adc_int = val_list[j]
+#                         with open(file_name, "a") as fdout:
+#                             fdout.write(f"{time_int},{ch_int},{adc_int}\n")
+#             else:
+#                 time.sleep(sleep_on_empty)
+#     except KeyboardInterrupt:
+#         if verbose:
+#             print()
+#             print("Terminated early due to keyboard interrupt.")
+#     num_samples = i
+#     end_time = time.time()
+#     duration = end_time-start_time
+#     if verbose:
+#         print()
+#     return num_samples, duration, bad_line_counter
+
+# if __name__ == "__main__":
+#     import sys
+#     if len(sys.argv) >= 2:
+#         json_file = sys.argv[1]
+#     else:
+#         json_file = "multi_device_test.json"
+    
+#     print("========================================================")
+#     print("Using file: ")
+#     print(f"\t\"{json_file}\"")
+#     print("========================================================")
+#     collect_data_according_to_file(json_file)

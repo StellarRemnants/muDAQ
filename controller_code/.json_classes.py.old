@@ -10,7 +10,6 @@ import json
 import os
 
 from global_constants import INIT_BAUD, SERIAL_READ_TIMEOUT
-from PIN_CONSTANTS import get_pin_id_num
 
 DEFAULT_IGNORE_FIRST_LINES = 10
 DEFAULT_CHECK_PORT_EXISTS = False
@@ -146,6 +145,7 @@ class device_settings:
             "device_name",
             "channel_list",
             "port",
+            "data_file_prefix",
             ]
         
         optional_keys = [
@@ -213,6 +213,7 @@ class device_settings:
             device_name,
             channel_list,
             port,
+            data_file_prefix,
             baudrate = INIT_BAUD,
             ignore_first_lines = DEFAULT_IGNORE_FIRST_LINES,
             check_port_exists = False,
@@ -230,6 +231,7 @@ class device_settings:
             raise ValueError(f"Invalid device port \"{port}\". Does not Exist!")
         
         self.device_name = self.validate_name(device_name)
+        self.data_file_prefix = data_file_prefix
         self.baudrate = baudrate
         self.ignore_first_lines = ignore_first_lines
         self.check_port_exists = check_port_exists
@@ -284,8 +286,7 @@ class program_settings:
         required_keys = [
             'program_name', 
             'delay_on_empty', 
-            'device_list',
-            "data_file_prefix",
+            'device_list'
             ]
         
         optional_keys = [
@@ -308,11 +309,6 @@ class program_settings:
         req_args = {}
         for req_key in required_keys:
             req_args[req_key] = indict[req_key]
-            
-            
-        for dev in req_args["device_list"]:
-            for ch in dev["channel_list"]:
-                ch["pin_id"] = get_pin_id_num(ch["pin_id"])
         
         opt_args = {}
         for opt_key in optional_keys:
@@ -330,7 +326,7 @@ class program_settings:
                         device_list[i] = device_settings.from_dict(device_list[i])
         
         req_args["device_list"] = device_list     
-                
+        
         
         pass_args = {}
         for req_key in req_args.keys():
@@ -340,8 +336,7 @@ class program_settings:
                 pass_args[opt_key] = opt_args[opt_key]
             else:
                 raise ValueError(f"Got repeated definition of optional key {opt_key}")
-        
-        
+            
         return program_settings(**pass_args)
     
     def to_json(self, *args, **kwargs):
@@ -351,12 +346,10 @@ class program_settings:
             self,
             program_name,
             device_list,
-            data_file_prefix,
             delay_on_empty = SERIAL_READ_TIMEOUT,
             ):
         
         self.program_name = self.validate_name(program_name)
-        self.data_file_prefix = data_file_prefix
         self.delay_on_empty = delay_on_empty
         self.device_list = self.validate_device_list(device_list)
         

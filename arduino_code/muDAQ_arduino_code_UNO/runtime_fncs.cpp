@@ -1,7 +1,7 @@
 /*==================================================
  * runtime_fncs.cpp
  * Created:       2022-05-09
- * Last Modified: 2022-05-22
+ * Last Modified: 2022-08-26
  * By: Joseph Lewis-Merrill
  * 
  * Description: 
@@ -69,6 +69,9 @@ void read_adc(struct daq_settings* ds) {
       //   Keeps sample spacing as close to pin delay as possible
       //   with minimal overhead.
       target_time = start_micros - ds->pin_delays[i];
+      if (ds->pin_measurement_times[i] > target_time) { //Added to fix rollover sample spacing issue (2022-08-17, Lewis-Merrill)
+        ds->pin_measurement_times[i] = 0;
+      }
       while (ds->pin_measurement_times[i] < target_time) {
         ds->pin_measurement_times[i] += ds->pin_delays[i];
       }

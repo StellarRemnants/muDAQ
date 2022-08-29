@@ -1,7 +1,7 @@
 /*==================================================
  * base_fncs.cpp
  * Created:       2022-05-09
- * Last Modified: 2022-08-17
+ * Last Modified: 2022-08-26
  * By: Joseph Lewis-Merrill
  * 
  * Description:
@@ -550,7 +550,7 @@ bool duration_elapsed(
     unsigned long elapsed = 0;
     if (now_micros < last_micros) {
       // Rollover has occurred!
-      elapsed = (42949672955 - last_micros) + now_micros + 1;
+      elapsed = (42949672955 - last_micros) + now_micros + 1; //Edited 2022-08-26 to fix rollover issue incorrect handling. Lewis-Merrill
     }
     else {
       elapsed = now_micros - last_micros;

@@ -18,7 +18,7 @@ MAX_TIME = 2**32
 DEFAULT_BIN_TIME = 5 #s
 
 DEFAULT_FILE_PATH = ("/home/stellarremnants/muDAQ/analysis_code/"
-"thermistor_data/real_tank_test/rtks_real_0002.csv")
+"thermistor_data/real_tank_test/rtks_real_0001.csv")
 
 if __name__ == "__main__":
     
@@ -209,5 +209,23 @@ if __name__ == "__main__":
         fig2.set_size_inches(np.asarray([1920, 1080])/fig.dpi)
         
         plt.draw()
+        
+    # %%
+    fig3, ax3 = plt.subplots()
+    for i in range(NUM_PINS):
+        ch_id, channel_name = channel_ids_list[i]
+        time, temp, error = compressed_dict[ch_id]
+        rfft = np.abs(np.real(np.fft.rfft(temp-np.mean(temp))))
+        psd = rfft**2
+        dt = np.mean(np.diff(time))
+        freqs = np.fft.rfftfreq(time.size, d=dt)
+        
+        plot_freqs = freqs[1:]
+        plot_period = 1/plot_freqs
+        plot_rfft = rfft[1:]
+        plot_psd = psd[1:]
+        
+        ax3.semilogx(plot_period, plot_rfft, ls="-", lw=0.5, marker=".", ms=2)
+        
     # %%
     input("Press ENTER to close plots.")
