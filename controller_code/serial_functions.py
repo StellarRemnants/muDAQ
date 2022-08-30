@@ -72,7 +72,10 @@ def bytestring_to_int(convert_bytestring, big_endian=True):
         use_bytestring = convert_bytestring
     
     use_hexstring = use_bytestring.hex()
-    return int(use_hexstring, 16)
+    if len(use_hexstring):
+        return int(use_hexstring, 16)
+    else:
+        return 0
 
 def hexstring_to_int(convert_hexstring, big_endian=True):
     if not(big_endian):

@@ -28,7 +28,9 @@ from serial_functions import (
     dev_read_until,
     )
 # %%
-
+# =============================================================================
+# General Functions
+# =============================================================================
 def get_program_settings(json_file_path):
     with open(json_file_path, "r") as fdin:
         return program_settings.from_dict(json.load(fdin))
@@ -121,74 +123,12 @@ def prepare_file(data_file_path, program, verbose = True):
         fdout.write("`---`,,\n")
         fdout.write("COMPTIME,DEVID,TIME,CH,ADC\n")
         
-# def collect_data_according_to_file(json_file_path, verbose=True):
-#     program = get_program_settings(json_file)
-#     for i in range(len(program.device_list)):
-#         device = get_device_settings(program, device_index=i)
-#         #TODO: Non-blocking read implementation for multiple devices
-#         #TODO: Time synchronization for multiple devices
-#         dev, pins, pin_delays = prepare_device_for_read(device, verbose=verbose)
-#         dev.reset_output_buffer()
-#         for i in range(10):
-#             rl = dev.readline()
-#             if len(rl):
-#                 if verbose:
-#                     # print(f"Line: {rl}")
-#                     pass
-#         time.sleep(1)
-        
-#         if verbose:
-#             print("Reading for duration...")
-            
-#         data_file_prefix = device.data_file_prefix
-#         collection_mode = device.collection_mode.lower()
-        
-#         valid_name = False
-#         for i in range(10000):
-#             data_file_path = f"{data_file_prefix}_{i:04d}.csv"
-#             if os.path.exists(data_file_path):
-#                 pass
-#             else:
-#                 valid_name = True
-#                 break
-#         if not(valid_name):
-#             if verbose:
-#                 print("Maximum number of similarly named files reached for data_file_prefix "
-#                   f"\"{data_file_prefix}\". Please use a new data_file_prefix in your .json control file.")
-            
-#         else:
-#             if verbose:
-#                 print(f"Preparing file: \"{data_file_path}\"")
-#             prepare_file(data_file_path, device)
-#             if verbose:
-#                 print("Running data collection procedure \"duration\"...")
-            
-            
-#             if collection_mode == "duration":
-#                 num_samples, duration, bad_line_counter = read_to_file_for_duration(dev,
-#                                       pins,
-#                                       file_name = data_file_path,
-#                                       target_duration = device.collection_duration,
-#                                       ignore_first_lines = device.ignore_first_lines,
-#                                       sleep_on_empty = device.delay_on_empty,
-#                                       verbose=verbose,
-#                                       )
-#             elif collection_mode == "indefinite":
-#                 num_samples, duration, bad_line_counter = read_indefinite(dev,
-#                                       pins,
-#                                       file_name = data_file_path,
-#                                       ignore_first_lines = device.ignore_first_lines,
-#                                       sleep_on_empty = device.delay_on_empty,
-#                                       verbose=verbose,
-#                                       )
-#             else:
-#                 raise NotImplementedError(f"Collection mode \"{collection_mode}\" not yet implemented")
-    
-#             restart_device(dev, program, verbose=verbose)
 
 # %%
 
-    
+# =============================================================================
+# Multi-device functions
+# =============================================================================
     
 def validate_device_list(program):
     device_list = [get_device_settings(program, device_index=i) for i in range(len(program.device_list))]
@@ -253,7 +193,9 @@ def collection_start_fnc(data_file_path, program, verbose=True):
         for i in range(device_count):
             device = device_list[i]
             collection_mode = device.collection_mode.lower()
-            print(f"Dev {i:2d} -- MODE: {collection_mode} -- NAME: {device.device_name}")
+            print(f"Dev {i:2d} -- MODE: {collection_mode} -- NAME: {device.device_name}",end="")
+            if collection_mode == "duration":
+                print(f" -- DUR: {device.collection_duration}")
     
     ## GET START TIME
     start_time = time.time()
@@ -328,6 +270,9 @@ def thread_fnc(
     
     ## WAIT TO START UNTIL ALL THREADS READY
     start_array[device_id] = 0
+    if verbose:
+        print(f"\tDev {device_id:2d} -- NAME: {device.device_name} -- Ready to begin collection")
+        
     while np.sum(start_array):
         time.sleep(sleep_on_empty)
     
@@ -351,7 +296,7 @@ def thread_fnc(
                 ## "COMPTIME,DEVID,TIME,CH,ADC\n"
                 for ch_int, time_int, val_int in val_list:
                     fdout.write(
-                        f"{comptime},{device_id},{ch_int},{time_int},{val_int}\n"
+                        f"{comptime},{device_id},{time_int},{ch_int},{val_int}\n"
                         )
             ## RELEASE FILE_LOCK
             file_lock.release()
@@ -399,10 +344,22 @@ def start_threads(threads):
         thread.start()
 
 ## MONITOR THREADS
-def monitor_threads(threads, end_array, verbose=True):
+def monitor_threads(threads, end_array, verbose=True, update_interval=0.01):
     try:
-        while np.any([thread.is_alive() for thread in threads]):
-            pass
+        initial_time = time.time()
+        threads_alive = True
+        threads_total = len(threads)
+        while threads_alive:
+            threads_status = [thread.is_alive() for thread in threads]
+            threads_alive = np.any(threads_status)
+            threads_alive_count = np.sum(threads_status)
+            time_elapsed = time.time()-initial_time
+            if threads_alive:
+                print(f"\rThreads: {threads_alive_count}/{threads_total} :: Approx. Elapsed: {time_elapsed:.0f}s     ", end="")
+                time.sleep(update_interval)
+            else:
+                print(f"\rExecution Completed! Total Approx. Time Elapsed: {time_elapsed:.0f}s")
+            
     except KeyboardInterrupt:
         if verbose:
             print("KeyboardInterrupt received. Terminating data collection ... ")
