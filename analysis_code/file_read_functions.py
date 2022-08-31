@@ -143,17 +143,79 @@ def separate_channels(dataframe):
         data_dict[ch_id] = sliced_dataframe.reset_index(drop=True)
         
     return data_dict
+
+# %%
+
+
+def thermistor_processing(
+        data_dict, 
+        ch_id, 
+        channel_settings, 
+        correct_on_sensor_id, 
+        correct_R_to_T_directly, 
+        fit_degree):
+    
+        if "thermistor_type" in channel_settings[ch_id].keys():
+            thermistor_type = channel_settings[ch_id]["thermistor_type"].lower()
+        else:
+            thermistor_type = "unknown"
+        
+        cond = data_dict[ch_id]["voltage"] > 0
+        # data_dict[ch_id] = data_dict[ch_id].loc[cond]
+        resistance = thermistor_resistance_from_voltage(data_dict[ch_id]["voltage"][cond], 
+                                                        channel_settings[ch_id]["ref_resistance"], 
+                                                        channel_settings[ch_id]["ref_voltage"])
+        
+        if correct_on_sensor_id:
+            sensor_id = channel_settings[ch_id]["sensor_id"]
+            if sensor_id.lower() != "unknown":
+                if correct_R_to_T_directly:
+                    temp_C = correct_resistance_to_temperature(resistance, sensor_id)
+                else:
+                    resistance = correct_resistance_to_resistance(resistance, sensor_id)
+                    temp_C = thermistor_temp_C_from_resistance(resistance, 
+                                                                fit_degree=fit_degree, 
+                                                                thermistor_type=thermistor_type)
+            else:
+                temp_C = thermistor_temp_C_from_resistance(resistance, 
+                                                            fit_degree=fit_degree, 
+                                                            thermistor_type=thermistor_type)
+        else:
+            temp_C = thermistor_temp_C_from_resistance(resistance, 
+                                                        fit_degree=fit_degree, 
+                                                        thermistor_type=thermistor_type)
+            
+        data_dict[ch_id] = data_dict[ch_id].assign(
+            resistance=np.zeros_like(data_dict[ch_id]["voltage"])
+            ).reset_index(drop=True)
+        data_dict[ch_id].loc[cond,"resistance"] = resistance
+        data_dict[ch_id].loc[np.logical_not(cond), "resistance"] = np.inf
+
+        data_dict[ch_id] = data_dict[ch_id].assign(
+            temp_C=np.zeros_like(data_dict[ch_id]["voltage"])
+            ).reset_index(drop=True)
+        data_dict[ch_id].loc[cond,"temp_C"] = temp_C
+        data_dict[ch_id].loc[np.logical_not(cond), "temp_C"] = np.inf
+        
+        return data_dict
+        
+        
 # %%
 def process_data_from_path(data_file_path,
-                           fit_degree = 6,
-                           correct_on_sensor_id = True,
-                           correct_R_to_T_directly=True,
-                           ):
+                            fit_degree = 6,
+                            correct_on_sensor_id = True,
+                            correct_R_to_T_directly=True,
+                            ):
+    # Load data from file
     fdin, start_datetime, program_dict = load_preamble(data_file_path)
     whole_dataframe = load_dataframe(fdin)
     fdin.close()
+    
+    # Get device list
     device_list = program_dict["device_list"]
     all_device_dict = {}
+    
+    # Process each device
     for i in range(len(device_list)):
         
         # Get the dataframe entries corresponding to this device
@@ -165,7 +227,7 @@ def process_data_from_path(data_file_path,
         
         # Pull each channel into a separate dictionary entry keyed by ch_id
         data_dict = separate_channels(dataframe)
-        print(data_dict)
+        # print(data_dict)
         # Parse parameters for each channel
         channel_settings = {}
         for channel_dict in device_dict["channel_list"]:
@@ -174,144 +236,47 @@ def process_data_from_path(data_file_path,
         
         # Correct each channel according to appropriate calibration 
         # Calculate resistance and temperature for thermistors
-        for ch_id in channel_settings.keys():
+        # Leave "unknown" and "voltage" type sensors alone
+        # Looks for only channel numbers found in settings
+        for ch_id in channel_settings.keys(): 
+            
+            # Only attempt to process channels that are actually present
             if ch_id in data_dict.keys():
+                
+                # Get sensor type to find appropriate processing function
                 sensor_type = channel_settings[ch_id]["sensor_type"].lower()
+                
+                # Thermistor
                 if sensor_type == "thermistor":
-                    if "thermistor_type" in channel_settings[ch_id].keys():
-                        thermistor_type = channel_settings[ch_id]["thermistor_type"].lower()
-                    else:
-                        thermistor_type = "unknown"
-                    cond = data_dict[ch_id]["voltage"] > 0
-                    data_dict[ch_id] = data_dict[ch_id].loc[cond]
-                    resistance = thermistor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
-                                                                   channel_settings[ch_id]["ref_resistance"], 
-                                                                   channel_settings[ch_id]["ref_voltage"])
+                    data_dict = thermistor_processing(
+                            data_dict, 
+                            ch_id, 
+                            channel_settings, 
+                            correct_on_sensor_id, 
+                            correct_R_to_T_directly, 
+                            fit_degree)
                     
-                    if correct_on_sensor_id:
-                        sensor_id = channel_settings[ch_id]["sensor_id"]
-                        if sensor_id.lower() != "unknown":
-                            if correct_R_to_T_directly:
-                                temp_C = correct_resistance_to_temperature(resistance, sensor_id)
-                            else:
-                                resistance = correct_resistance_to_resistance(resistance, sensor_id)
-                                temp_C = thermistor_temp_C_from_resistance(resistance, 
-                                                                           fit_degree=fit_degree, 
-                                                                           thermistor_type=thermistor_type)
-                        else:
-                            temp_C = thermistor_temp_C_from_resistance(resistance, 
-                                                                       fit_degree=fit_degree, 
-                                                                       thermistor_type=thermistor_type)
-                    else:
-                        temp_C = thermistor_temp_C_from_resistance(resistance, 
-                                                                   fit_degree=fit_degree, 
-                                                                   thermistor_type=thermistor_type)
-                        
-                    data_dict[ch_id] = data_dict[ch_id].assign(resistance=resistance).reset_index(drop=True)
-                    data_dict[ch_id] = data_dict[ch_id].assign(temp_C=temp_C).reset_index(drop=True)
+                    
+                # Non processing options
                 elif sensor_type == "unknown":
                     pass
+                elif sensor_type == "voltage":
+                    pass
                 
+                # Unrecognized sensor_type
                 else:
                     raise NotImplementedError(f"Analysis for sensor_type \"{sensor_type}\" is not yet implemented")
-        print(data_dict)
+        # print(data_dict)
         all_device_dict[i] = data_dict
             
             
     return all_device_dict, program_dict, start_datetime
-    
+
 
 # %%
 
-# if __name__ == "__main__":
-#     data_file_path = (
-#         "./thermistor_data/thermistor_02_test_0008.csv"
-#         )
-#     data_dict, device_dict, start_datetime = process_data_from_path(data_file_path)
-
-# %%
-# def process_data_from_path(data_file_path,
-#                            fit_degree = 6,
-#                            correct_on_sensor_id = True,
-#                            correct_R_to_T_directly=True,
-#                            ):
-    
-    
-fit_degree = 6
-correct_on_sensor_id = True
-correct_R_to_T_directly=True
-    
-data_file_path = "/home/stellarremnants/muDAQ/analysis_code/thermistor_data/multi_device_test/mdt__0015.csv"
-fdin, start_datetime, program_dict = load_preamble(data_file_path)
-whole_dataframe = load_dataframe(fdin)
-fdin.close()
-device_list = program_dict["device_list"]
-all_device_dict = {}
-for i in range(len(device_list)):
-    
-    # Get the dataframe entries corresponding to this device
-    device_dict = device_list[i]
-    dev_sec_dataframe = whole_dataframe[whole_dataframe["DEVID"]==i]
-    
-    # Calculate voltage according to the device settings
-    dataframe = adc_to_voltage(dev_sec_dataframe, device_dict["max_voltage"], device_dict["bit_resolution"])
-    
-    # Pull each channel into a separate dictionary entry keyed by ch_id
-    data_dict = separate_channels(dataframe)
-    # print(data_dict)
-    # Parse parameters for each channel
-    channel_settings = {}
-    for channel_dict in device_dict["channel_list"]:
-        ch_id = channel_dict["pin_id"]
-        channel_settings[ch_id] = channel_dict
-    
-    # Correct each channel according to appropriate calibration 
-    # Calculate resistance and temperature for thermistors
-    for ch_id in channel_settings.keys():
-        if ch_id in data_dict.keys():
-            sensor_type = channel_settings[ch_id]["sensor_type"].lower()
-            if sensor_type == "thermistor":
-                # print(f"{ch_id} is thermistor")
-                if "thermistor_type" in channel_settings[ch_id].keys():
-                    thermistor_type = channel_settings[ch_id]["thermistor_type"].lower()
-                else:
-                    thermistor_type = "unknown"
-                
-                print(f"{ch_id} : thermistor is of type {thermistor_type}")
-                cond = data_dict[ch_id]["voltage"] > 0
-                data_dict[ch_id] = data_dict[ch_id].loc[cond]
-    #             resistance = thermistor_resistance_from_voltage(data_dict[ch_id]["voltage"], 
-    #                                                             channel_settings[ch_id]["ref_resistance"], 
-    #                                                             channel_settings[ch_id]["ref_voltage"])
-                
-    #             if correct_on_sensor_id:
-    #                 sensor_id = channel_settings[ch_id]["sensor_id"]
-    #                 if sensor_id.lower() != "unknown":
-    #                     if correct_R_to_T_directly:
-    #                         temp_C = correct_resistance_to_temperature(resistance, sensor_id)
-    #                     else:
-    #                         resistance = correct_resistance_to_resistance(resistance, sensor_id)
-    #                         temp_C = thermistor_temp_C_from_resistance(resistance, 
-    #                                                                     fit_degree=fit_degree, 
-    #                                                                     thermistor_type=thermistor_type)
-    #                 else:
-    #                     temp_C = thermistor_temp_C_from_resistance(resistance, 
-    #                                                                 fit_degree=fit_degree, 
-    #                                                                 thermistor_type=thermistor_type)
-    #             else:
-    #                 temp_C = thermistor_temp_C_from_resistance(resistance, 
-    #                                                             fit_degree=fit_degree, 
-    #                                                             thermistor_type=thermistor_type)
-                    
-    #             data_dict[ch_id] = data_dict[ch_id].assign(resistance=resistance).reset_index(drop=True)
-    #             data_dict[ch_id] = data_dict[ch_id].assign(temp_C=temp_C).reset_index(drop=True)
-    #         elif sensor_type == "unknown":
-    #             pass
-            
-    #         else:
-    #             raise NotImplementedError(f"Analysis for sensor_type \"{sensor_type}\" is not yet implemented")
-    # print(data_dict)
-    # all_device_dict[i] = data_dict
-        
-        
-# return all_device_dict, program_dict, start_datetime
+if __name__ == "__main__":
+    data_file_path = (
+        "/home/stellarremnants/muDAQ/analysis_code/thermistor_data/multi_device_test/mdt__0015.csv"
+        )
+    all_device_dict, program_dict, start_datetime = process_data_from_path(data_file_path)
