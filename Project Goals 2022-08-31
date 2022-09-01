@@ -1,0 +1,86 @@
+== muDAQ Goals ==
+
+- Full thermocouple (TC) support for acquisition and analysis
+	- Needed for vertical flow velocity (VFV) sensing
+
+- Heat flux sensor (HFS) support
+
+- Displacement sensor (DpS) support
+
+- Full multidevice integration for acquisition and analysis
+	- Allows for extension of channel count without needing additional non-arduino ADC boards
+	- Also allows for more modularity
+	
+- (optional) support for external/non-arduino ADC boards
+	- Not immediately relevant (long term future)
+	
+== Experiment Goals ==
+
+- Baseline:
+	- Find material parameters for experimental fluids (mostly done, karo syrup?)
+	- Calculate Pr for experimental fluids (mostly done, karo syrup?)
+	- Run an experiment with full basal heating and associated sensors
+	- Calculate Rayleigh number (Ra) for an experiment
+	- Run an experiment with VFV sensor arrangement alongside above
+	- Calculate Ra and Reynold's number (Re) for experiment
+	- Repeat to find relation between Pr, Ra, Re
+	- Could have low reproduction/repition time as we may not need to power off between runs
+	
+	- Summary of Future Goals:
+		- Execute simple demonstration experiments as previously planned
+	
+- Internal Heating:
+	- Experiment with current light sources (need to determine actual power output if possible, HFS?)
+	- Prepare light insulated tank?
+	- Need armature for light source
+	- NEED TO VALIDATE WE CAN GET SUFFICIENT POWER DENSITY TO MAKE METHOD VIABLE
+	- Assuming sufficient power density, assemble tank structure
+	- Run experiment with full sensor array
+	- Calculate new Ra, Re, Pr relationship for internal heating power (H)
+	
+	- Summary of Future Goals:
+		- Need to test whether we can get sufficient lighting power density for application
+		- Once (/if) validated, build on baseline tools with new apparatus
+	
+- Plume Merger:
+	- Get results/numbers from Arthur and Kavya to analyze
+	- Compare to simulations from Winter/Spring '22
+	- Dimensional analysis - translate to a geophysical context
+	- Run new simulations with dimensionalized values to recreate (as much as possible) physical results
+	- Run 3D simulations?
+	- Repeat additional plume merger experiments with sensor suite to get additional data
+	- New Tank! 
+		- Variable width using simple dividers
+		- At least 4x width compared to height, ~30cm tall?, at least a deep as is tall
+		- Inductive heating preferable (reduces heat source & adjustment process complexity)
+		- Would likely be very expensive, not an immediate possibility
+		- Would greatly facillitate plume merger research on a larger scale with greater refinement.
+		- Better facimile for the mantle than current "make-do" tanks in terms of aspect ratio
+	- Hard time limit minimum imposed by waiting for tank to settle. 
+		- Need ideas to speed up the process without losing validity. 
+		- Different working fluid??
+		
+	- Summary of Future Goals: 
+		- Obtain and analyze work up to this point
+		- More refined simulation and lab work
+		- Need to consider in geophysical context and potentially redesign some aspects 
+	
+- Surface Displacement/Morphology:
+	- Need to validate how sensor works and get prototype validated
+	- Need to set up permanent surface displacement sensor circuitry and acquisition+analysis code
+	- Need armature for sensor
+		- Scanning armature would be fantastic!
+		- Simple armature with steel bars, base stands, and clamps would be cheaper and easier to implement
+		- Simple first, scanning maybe later if we can afford/justify it
+	- Can be applied to any open-top experiment
+	- More effective with surface coating?
+		- Absorptive, matte, or reflective?
+	- Can easily(?) train undergrad to work with system and take measurements
+	- Could combine with plume merger work
+		
+	- Summary of Future Goals:
+		- Prototype and validate surface displacement sensor system
+		- Build armature for sensor
+		- Use in tandem with basically any other experiment w/ open top
+	
+	
