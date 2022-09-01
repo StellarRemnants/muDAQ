@@ -10,6 +10,7 @@ from file_read_functions import process_data_from_path
 import matplotlib.pyplot as plt
 import numpy as np
 # import sys
+import warnings
 import argparse
 
 # from scipy.signal import savgol_filter
@@ -22,7 +23,7 @@ DEFAULT_FILE_PATH = ("/home/stellarremnants/muDAQ/analysis_code/"
 
 if __name__ == "__main__":
     
-    
+    # warnings.simplefilter('error', UserWarning)  ## Use to have warnings throw errors instead to track down source
     
     plt.ion()
     
@@ -151,8 +152,9 @@ if __name__ == "__main__":
             
             time, temp, temp_error = compressed_dict[ch_id]
             
+            cond = np.isfinite(temp)
             if bin_time > 0:
-                axes[0].errorbar(time, temp, yerr=temp_error, label=f"CH:{ch_id:02d} :: {channel_name}",
+                axes[0].errorbar(time[cond], temp[cond], yerr=temp_error[cond], label=f"CH:{ch_id:02d} :: {channel_name}",
                                   ls="-", marker=".", capsize=2,
                                   )
             else:
