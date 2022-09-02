@@ -228,7 +228,7 @@ def collect_indefinite_condition(*args, **kwargs):
     return True
 
 def parse_readline(rl):
-    pods = [a.split(b",") for a in rl.split(b";")][:-1]
+    pods = [a.split(b"`,") for a in rl.split(b"`;")][:-1]
     ret = []
     for pod in pods:
         if len(pod) != 3:
@@ -286,7 +286,7 @@ def thread_fnc(
         comptime = time.time()
         if len(rl):
             val_list = parse_readline(rl)
-            # print(val_list)
+            # print(f"\n{rl} <::> {val_list}")
             ## COMPUTER TIMESTAMP
             ## ACQUIRE FILE_LOCK
             file_lock.acquire()
@@ -295,6 +295,7 @@ def thread_fnc(
             ## WRITE TO FILE
                 ## "COMPTIME,DEVID,TIME,CH,ADC\n"
                 for ch_int, time_int, val_int in val_list:
+                    # if not (ch_int in )
                     fdout.write(
                         f"{comptime},{device_id},{time_int},{ch_int},{val_int}\n"
                         )

@@ -16,10 +16,10 @@ import argparse
 # from scipy.signal import savgol_filter
 
 MAX_TIME = 2**32
-DEFAULT_BIN_TIME = 5 #s
+DEFAULT_BIN_TIME = 0.01 #s
 
 DEFAULT_FILE_PATH = ("/home/stellarremnants/muDAQ/analysis_code/"
-                     "thermistor_data/multi_device_test/mdt__0015.csv")
+                     "thermistor_data/thermocouple_testing/tctest__0004.csv")
 
 if __name__ == "__main__":
     

@@ -199,6 +199,21 @@ def thermistor_processing(
         
         return data_dict
         
+def thermocouple_temp_C_from_voltage(voltage, gain=500, tc_factor=40e-6):
+    temp_C = voltage / gain / tc_factor + 25
+    return temp_C
+    
+    
+def thermocouple_processing(data_dict, ch_id):
+    voltage = data_dict[ch_id]["voltage"]
+    temp_C = thermocouple_temp_C_from_voltage(voltage)
+    
+    data_dict[ch_id] = data_dict[ch_id].assign(
+        temp_C=np.zeros_like(voltage)
+        ).reset_index(drop=True)
+    data_dict[ch_id].loc[:,"temp_C"] = temp_C
+    
+    return data_dict
         
 # %%
 def process_data_from_path(data_file_path,
@@ -255,7 +270,12 @@ def process_data_from_path(data_file_path,
                             correct_on_sensor_id, 
                             correct_R_to_T_directly, 
                             fit_degree)
-                    
+                #thermocouple
+                elif sensor_type == "thermocouple":
+                    data_dict = thermocouple_processing(
+                        data_dict, 
+                        ch_id
+                        )
                     
                 # Non processing options
                 elif sensor_type == "unknown":
