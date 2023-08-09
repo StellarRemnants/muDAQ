@@ -19,7 +19,7 @@ MAX_TIME = 2**32
 DEFAULT_BIN_TIME = 0.01 #s
 
 DEFAULT_FILE_PATH = ("/home/stellarremnants/muDAQ/analysis_code/"
-                     "thermistor_data/thermocouple_testing/tctest__0004.csv")
+                     "teaching_example/example__0003.csv")
 
 if __name__ == "__main__":
     
@@ -105,6 +105,8 @@ if __name__ == "__main__":
             print(f"Channel: {i+1}/{NUM_PINS}")
             ch_id, channel_name = channel_ids_list[i]
             dataframe = data_dict[ch_id]
+            if not("temp_C" in dataframe.columns):
+                continue
             time = dataframe["TIME"] * 1e-6 - init_time
             temp = dataframe["temp_C"]
             
@@ -149,7 +151,9 @@ if __name__ == "__main__":
         for i in range(NUM_PINS):
             # print(f"PIN: {i+1}/{NUM_PINS}")
             ch_id, channel_name = channel_ids_list[i]
-            
+            dataframe = data_dict[ch_id]
+            if not("temp_C" in dataframe.columns):
+                continue
             time, temp, temp_error = compressed_dict[ch_id]
             
             cond = np.isfinite(temp)
@@ -219,6 +223,10 @@ if __name__ == "__main__":
         fig3.set_size_inches(np.asarray([1920,1080])/fig3.dpi)
         for i in range(NUM_PINS):
             ch_id, channel_name = channel_ids_list[i]
+            
+            dataframe = data_dict[ch_id]
+            if not("temp_C" in dataframe.columns):
+                continue
             time, temp, error = compressed_dict[ch_id]
             
             cond = np.isfinite(temp)

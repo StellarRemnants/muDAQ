@@ -1,0 +1,38 @@
+{
+  "program_name": "Teaching Example",
+  "delay_on_empty": 0.01,
+  "data_file_prefix": "../analysis_code/teaching_example/example_",
+  "device_list": [
+    {
+      "port": "/dev/ttyUSB0",
+      "device_name": "Artemis ATP",
+      "baudrate": 230400,
+      "ignore_first_lines": 10,
+      "check_port_exists": false,
+      "collection_mode": "indefinite",
+      "collection_duration": 10,
+      "collection_count": null,
+      "delay_on_empty": 0.01,
+      "max_voltage": 2,
+      "bit_resolution": 14,
+      "channel_list": [
+        {
+          "channel_name": "Thermistor",
+          "pin_id": "A29",
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "micro_betachip",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "03"
+        },
+        {
+          "channel_name": "Ungrounded",
+          "pin_id": "A11",
+          "pin_delay": 500,
+          "sensor_type": "voltage"
+        }
+      ]
+    }
+  ]
+}
