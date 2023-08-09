@@ -297,7 +297,7 @@ def thread_fnc(
                 for ch_int, time_int, val_int in val_list:
                     # if not (ch_int in )
                     fdout.write(
-                        f"{comptime},{device_id},{time_int},{ch_int},{val_int}\n"
+                        f"{comptime},{device_id},{ch_int},{time_int},{val_int}\n"
                         )
             ## RELEASE FILE_LOCK
             file_lock.release()
