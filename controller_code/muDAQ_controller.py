@@ -121,7 +121,7 @@ def prepare_file(data_file_path, program, verbose = True):
         fdout.write(prog_json)
         fdout.write("\n")
         fdout.write("`---`,,\n")
-        fdout.write("COMPTIME,DEVID,TIME,CH,ADC\n")
+        fdout.write("COMPTIME,DEVID,CH,TIME,ADC\n")
         
 
 # %%

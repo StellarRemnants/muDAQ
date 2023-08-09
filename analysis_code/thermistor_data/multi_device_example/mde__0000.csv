@@ -1,0 +1,45 @@
+UTC datetime,Wed Aug  9 20:17:32 2023
+UTC timestamp,1691612252.663284
+`---`,,
+{
+  "program_name": "Multi Device Example",
+  "data_file_prefix": "../analysis_code/thermistor_data/multi_device_example/mde_",
+  "delay_on_empty": 0.01,
+  "device_list": [
+    {
+      "port": "/dev/ttyUSB0",
+      "device_name": "TEST ARDUINO 1",
+      "baudrate": 230400,
+      "ignore_first_lines": 10,
+      "check_port_exists": false,
+      "collection_mode": "duration",
+      "collection_duration": 10,
+      "collection_count": null,
+      "delay_on_empty": 0.01,
+      "max_voltage": 2,
+      "bit_resolution": 14,
+      "channel_list": [
+        {
+          "channel_name": "Channel 1",
+          "pin_id": 29,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+          "sensor_id": "00"
+        },
+        {
+          "channel_name": "Channel 2",
+          "pin_id": 11,
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+          "sensor_id": "01"
+        }
+      ]
+    }
+  ]
+}
+`---`,,
+COMPTIME,DEVID,TIME,CH,ADC
