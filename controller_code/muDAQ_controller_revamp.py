@@ -50,7 +50,7 @@ if __name__ == "__main__":
     
     ## GET DATA FROM JSON
     program = get_program_settings(json_file)
-    validate_device_list(program)
+    validate_device_list(program, verbose=verbose)
     data_file_path = allocate_data_file_path(program, verbose=verbose)
     
     start_time, device_list, dev_args_list, device_count = collection_start_fnc(
@@ -68,6 +68,7 @@ if __name__ == "__main__":
                               end_array, 
                               start_time,
                               file_lock,
+                              verbose=verbose,
                               )
     start_threads(threads)
     monitor_threads(threads, end_array)

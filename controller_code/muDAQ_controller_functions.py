@@ -131,7 +131,7 @@ def prepare_file(data_file_path, program, verbose = True):
 # Multi-device functions
 # =============================================================================
     
-def validate_device_list(program):
+def validate_device_list(program, verbose=True):
     device_list = [get_device_settings(program, device_index=i) for i in range(len(program.device_list))]
     ports = np.asarray([device.port for device in device_list])
     unique_ports = np.unique(ports)
@@ -140,7 +140,8 @@ def validate_device_list(program):
     for i in range(counts.size):
         if counts[i] != 1:
             duplicates = True
-            print(f"Duplicate port: {unique_ports[i]} ({counts[i]} found)")
+            if verbose:
+                print(f"Duplicate port: {unique_ports[i]} ({counts[i]} found)")
     if duplicates:
         raise Exception(f"Duplicate port(s) found. Unable to safely continue. [{', '.join(unique_ports[counts > 1])}]")
         
@@ -149,19 +150,19 @@ def validate_device_list(program):
         if not(os.path.exists(port)):
             raise Exception(f"Port is not connected! \"{port}\"")
 
-def allocate_data_file_path(program, verbose=True):
+def allocate_data_file_path(program, verbose=True, MAX_FILE_COUNT=100000):
     data_file_prefix = program.data_file_prefix
-    
+    log_num = int(np.max([np.ceil(np.log10(MAX_FILE_COUNT)), 4]))
     valid_name = False
-    for i in range(10000):
-        data_file_path = f"{data_file_prefix}_{i:04d}.csv"
+    for i in range(MAX_FILE_COUNT):
+        data_file_path = f"{data_file_prefix}_{i:0{log_num}d}.csv"
         if os.path.exists(data_file_path):
             pass
         else:
             valid_name = True
             break
     if not(valid_name):
-        raise Exception("Maximum number of similarly named files reached for data_file_prefix "
+        raise Exception(f"Maximum number {MAX_FILE_COUNT} of similarly named files reached for data_file_prefix "
           f"\"{data_file_prefix}\". Please use a new data_file_prefix in your .json control file.")
     else:
         
@@ -194,9 +195,12 @@ def collection_start_fnc(data_file_path, program, verbose=True):
         for i in range(device_count):
             device = device_list[i]
             collection_mode = device.collection_mode.lower()
-            print(f"Dev {i:2d} -- MODE: {collection_mode} -- NAME: {device.device_name}",end="")
-            if collection_mode == "duration":
-                print(f" -- DUR: {device.collection_duration}")
+            if verbose:
+                print(f"Dev {i:2d} -- MODE: {collection_mode} -- NAME: {device.device_name}",end="")
+                if collection_mode == "duration":
+                    print(f" -- DUR: {device.collection_duration}")
+                else:
+                    print()
     
     ## GET START TIME
     start_time = time.time()
@@ -357,10 +361,12 @@ def monitor_threads(threads, end_array, verbose=True, update_interval=0.01):
             threads_alive_count = np.sum(threads_status)
             time_elapsed = time.time()-initial_time
             if threads_alive:
-                print(f"\rThreads: {threads_alive_count}/{threads_total} :: Approx. Elapsed: {time_elapsed:.0f}s     ", end="")
+                if verbose:
+                    print(f"\rThreads: {threads_alive_count}/{threads_total} :: Approx. Elapsed: {time_elapsed:.0f}s     ", end="")
                 time.sleep(update_interval)
             else:
-                print(f"\rExecution Completed! Total Approx. Time Elapsed: {time_elapsed:.0f}s")
+                if verbose:
+                    print(f"\rExecution Completed! Total Approx. Time Elapsed: {time_elapsed:.0f}s")
             
     except KeyboardInterrupt:
         if verbose:
