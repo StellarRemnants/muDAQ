@@ -339,6 +339,7 @@ def create_threads(
             "verbose":verbose, 
             "sleep_on_empty":sleep_on_empty,
             "file_lock":file_lock,
+            "verbose":verbose,
             }
         thread = threading.Thread(target=thread_fnc, kwargs=args)
         threads.append(thread)

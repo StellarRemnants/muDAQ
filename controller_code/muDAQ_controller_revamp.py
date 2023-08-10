@@ -40,10 +40,11 @@ if __name__ == "__main__":
     json_file = args.json_file_path
     verbose = args.verbose
     
-    print("========================================================")
-    print("Using file: ")
-    print(f"\t\"{json_file}\"")
-    print("========================================================")
+    if verbose:
+        print("========================================================")
+        print("Using file: ")
+        print(f"\t\"{json_file}\"")
+        print("========================================================")
     # collect_data_according_to_file(json_file)
     # verbose = True
     # json_file = "/home/stellarremnants/muDAQ/controller_code/multi_device_test.json"
