@@ -33,12 +33,16 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument("json_file_path")
-    parser.add_argument("-v", action="count", dest="verbose")
+    parser.add_argument("-v", action="count", dest="verbose", default=1)
+    parser.add_argument("-s", action="store_true", dest="silent", default=False)
     
     args = parser.parse_args()
     
     json_file = args.json_file_path
     verbose = args.verbose
+    silent = args.silent
+    if silent:
+        verbose = 0
     
     if verbose:
         print("========================================================")
