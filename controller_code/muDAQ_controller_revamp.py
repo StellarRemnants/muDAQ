@@ -72,7 +72,7 @@ if __name__ == "__main__":
                               verbose=verbose,
                               )
     start_threads(threads)
-    monitor_threads(threads, end_array)
+    monitor_threads(threads, end_array, verbose=verbose)
     collection_end_fnc(dev_args_list, end_array, program, verbose)
     
 # %%
