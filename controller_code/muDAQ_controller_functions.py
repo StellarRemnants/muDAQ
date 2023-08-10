@@ -60,12 +60,12 @@ def prepare_device_for_read(device, verbose=True):
     
     if verbose:
         print("Sending read info to device...")
-    send_connect_byte(dev)
-    send_pin_count(dev, pins)
-    send_pins(dev, pins)
+    send_connect_byte(dev, verbose=verbose)
+    send_pin_count(dev, pins, verbose=verbose)
+    send_pins(dev, pins, verbose=verbose)
     
     dev.reset_input_buffer()
-    send_pin_delays(dev, pin_delays)
+    send_pin_delays(dev, pin_delays, verbose=verbose)
 
     return dev, pins, pin_delays
 
