@@ -1,0 +1,29 @@
+{
+  "Connection Settings": {
+		"host": "hephaestus.remote",
+		"username": "stellarremnants"
+  },
+  "File Settings": {
+  	"file_path": "muDAQ/analysis_code/thermistor_data/multi_device_example/mde__00011.csv",
+    "skip_data_bulk": true,
+		"initial_read": 1000
+  },
+  "Plot Settings": {
+		"refresh_interval": 0.1,
+		"point_count_per_channel": 600,
+		"data_margins": [
+		  0,
+		  0.1
+		],
+		"resolution": [
+		  1200,
+		  800
+		],
+		"legend_anchor": [
+		  1.15,
+		  0.95
+		],
+		"box_width": 0.85,
+		"box_height": 1.00
+  }
+}
