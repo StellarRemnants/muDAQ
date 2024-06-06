@@ -20,6 +20,7 @@ from live_plotter_functions import (
 
 import json
 import argparse
+import matplotlib.pyplot as plt
     
 # %%
 if __name__ == "__main__":
@@ -92,68 +93,68 @@ if __name__ == "__main__":
     #         else:
     #             raise KeyError(f"Could not find intermediate key '{key_list[0]}'")
 # %%
-    if verbose >= 1:
-        print("Connecting to client")
-    client = connect_to_client(
-        json_dict["Connection Settings"]["host"], 
-        json_dict["Connection Settings"]["username"]
-        )
-    sftp = connect_client_sftp(client)
-    fdin = file_open_for_read(
-        sftp, 
-        json_dict["File Settings"]["file_path"]
-        )
-    
+    #if verbose >= 1:
+    #    print("Connecting to client")
+    #client = connect_to_client(
+    #    json_dict["Connection Settings"]["host"], 
+    #    json_dict["Connection Settings"]["username"]
+    #    )
+    #sftp = connect_client_sftp(client)
+with file_open_for_read(
+json_dict["File Settings"]["file_path"]
+) as fdin:
+# with open(json_dict["File Settings"]["file_path"], "rb") as fdin:
     fdin, start_datetime, program_dict = load_preamble(fdin)
     
     max_voltage = program_dict["device_list"][0]["max_voltage"]
     bit_resolution = program_dict["device_list"][0]["bit_resolution"]
-    
+    	    
     start_time = start_datetime.timestamp()
-    
+    	    
+    # plt.ioff()
     columns, channels, data_dict, program_dict = \
-        initial_file_load(
-            fdin, 
-            json_dict["File Settings"]["skip_data_bulk"], 
-            json_dict["File Settings"]["initial_read"], 
-            json_dict["Plot Settings"]["point_count_per_channel"], 
-            program_dict,
-            json_dict["File Settings"]["file_path"]
-                          )
-        
+    		initial_file_load(
+    		    fdin, 
+    		    json_dict["File Settings"]["skip_data_bulk"], 
+    		    json_dict["File Settings"]["initial_read"], 
+    		    json_dict["Plot Settings"]["point_count_per_channel"], 
+    		    program_dict,
+    		    json_dict["File Settings"]["file_path"]
+    		                  )
     formatter = formatter_fnc()
-    
     fig, ax, lines = live_plot_setup(
-            formatter, 
-            channels, 
-            data_dict, 
-            program_dict, 
-            json_dict["Plot Settings"]["legend_anchor"], 
-            json_dict["Plot Settings"]["data_margins"],
-            json_dict["Plot Settings"]["resolution"],
-            json_dict["Connection Settings"]["username"],
-            json_dict["Connection Settings"]["host"],
-            json_dict["File Settings"]["file_path"],
-            start_time,
-            json_dict["Plot Settings"]["box_width"],
-            json_dict["Plot Settings"]["box_height"],
-            )
-    
+    		    formatter, 
+    		    channels, 
+    		    data_dict, 
+    		    program_dict, 
+    		    json_dict["Plot Settings"]["legend_anchor"], 
+    		    json_dict["Plot Settings"]["data_margins"],
+    		    json_dict["Plot Settings"]["resolution"],
+    		    json_dict["Connection Settings"]["username"],
+    		    json_dict["Connection Settings"]["host"],
+    		    json_dict["File Settings"]["file_path"],
+    		    start_time,
+    		    json_dict["Plot Settings"]["box_width"],
+    		    json_dict["Plot Settings"]["box_height"],
+    		    json_dict["Plot Settings"]["field"],
+    		    )
+    	    
     live_plotter_loop(
-            fdin, 
-            columns, 
-            channels, 
-            data_dict, 
-            json_dict["Plot Settings"]["point_count_per_channel"],
-            lines,
-            ax,
-            program_dict,
-            json_dict["Plot Settings"]["legend_anchor"],
-            json_dict["Plot Settings"]["data_margins"],
-            json_dict["Plot Settings"]["refresh_interval"],
-            fig,
-            start_time
-            )
-    
-    close_connection(client, sftp)
-    
+    		    fdin, 
+    		    columns, 
+    		    channels, 
+    		    data_dict, 
+    		    json_dict["Plot Settings"]["point_count_per_channel"],
+    		    lines,
+    		    ax,
+    		    program_dict,
+    		    json_dict["Plot Settings"]["legend_anchor"],
+    		    json_dict["Plot Settings"]["data_margins"],
+    		    json_dict["Plot Settings"]["refresh_interval"],
+    		    fig,
+    		    start_time,
+    		    json_dict["Plot Settings"]["field"],
+    		    )
+    # plt.ion()
+#close_connection(client, sftp)
+

@@ -45,6 +45,7 @@ def load_preamble(fdin, read_until="`---`"):
                 readline = readline[:-1]
             preamble_lines.append(readline)
     
+    print(preamble_lines)
     program_dict = json.loads("\n".join(preamble_lines))
     timestamp = None
     for tl in time_lines:
@@ -121,7 +122,7 @@ def convert_ADC_to_voltage(adc_values, max_voltage, bit_resolution):
 def convert_voltage_to_resistance(voltage, ref_resistance, ref_voltage):
     return ref_resistance / (ref_voltage/voltage - 1)
     
-def plot_line(ax, data_dict, channel, program_dict, start_time, **kwargs):
+def plot_line(ax, data_dict, channel, program_dict, start_time, plot_val="resistance", **kwargs):
     max_voltage = program_dict["device_list"][0]["max_voltage"]
     bit_resolution = program_dict["device_list"][0]["bit_resolution"]
     
@@ -142,13 +143,25 @@ def plot_line(ax, data_dict, channel, program_dict, start_time, **kwargs):
     adc = data_dict[channel]["ADC"]
     voltage = convert_ADC_to_voltage(adc, max_voltage, bit_resolution)
     resistance = convert_voltage_to_resistance(voltage, ref_resistance, ref_voltage)
+    
+    
+    if plot_val.lower() == "resistance":
+        val = resistance
+    elif plot_val.lower() == "voltage":
+        val = voltage
+    elif plot_val.lower() == "adc":
+        val = adc
+    else:
+        val = voltage
+    
+    
     line = ax.plot(data_dict[channel]["COMPTIME"]-start_time, 
-                   resistance,
+                   val,
             label=label, **kwargs)[0]
     
     return line
 
-def modify_data(data_dict, channel, lines, program_dict, start_time):
+def modify_data(data_dict, channel, lines, program_dict, start_time, plot_val="resistance"):
     max_voltage = program_dict["device_list"][0]["max_voltage"]
     bit_resolution = program_dict["device_list"][0]["bit_resolution"]
     
@@ -166,8 +179,20 @@ def modify_data(data_dict, channel, lines, program_dict, start_time):
     voltage = convert_ADC_to_voltage(adc, max_voltage, bit_resolution)
     resistance = convert_voltage_to_resistance(voltage, ref_resistance, ref_voltage)
     
+    
+    
     line = lines[channel]
-    line.set_data(data_dict[channel]["COMPTIME"]-start_time, resistance)
+    
+    if plot_val.lower() == "resistance":
+        val = resistance
+    elif plot_val.lower() == "voltage":
+        val = voltage
+    elif plot_val.lower() == "adc":
+        val = adc
+    else:
+        val = voltage
+        
+    line.set_data(data_dict[channel]["COMPTIME"]-start_time, val)
     
 def reset_legend(ax, anchor_tuple=(1.25, 0.95), **legend_kwargs):
     ax.legend(bbox_to_anchor=anchor_tuple, loc="center", **legend_kwargs)
@@ -183,8 +208,8 @@ def connect_client_sftp(client):
     sftp = client.open_sftp()
     return sftp
 
-def file_open_for_read(sftp, file_path):
-    fdin = sftp.open(file_path, "r")
+def file_open_for_read(file_path):
+    fdin = open(file_path, "r")
     return fdin
 
 def close_connection(client, fdin):
@@ -204,9 +229,9 @@ def initial_file_load(
         init_read = fdin.read().decode()
     else:
         init_read = fdin.read(init_seek)
-        init_split = init_read.split(b"\n")
+        init_split = init_read.split("\n")
         line_size = max([len(init_split[i]) for i in range(len(init_split))])
-        init_read = b"\n".join(init_split[:-1]).decode()
+        init_read = "\n".join(init_split[:-1])
         starting_offset = (line_size+2) * plot_last_points * sum(
             [len(program_dict["device_list"][i]["channel_list"]) for i in range(
                 len(program_dict["device_list"]))
@@ -228,12 +253,12 @@ def initial_file_load(
     del(init_df, init_data_dict, init_read)
     
     if skip_bulk:
-        fdin.seek(-starting_offset, 2)
+        # fdin.seek(-starting_offset, 2)
         pos = fdin.tell()
         if pos < 0:
             fdin.seek(0,2)
-        rl = b" "
-        while len(rl) and rl != b"\n":
+        rl = " "
+        while len(rl) and rl != "\n":
             rl = fdin.read(1)
     
     return columns, channels, data_dict, program_dict
@@ -251,12 +276,13 @@ def live_plotter_loop(
         margins,
         refresh_period,
         fig,
-        start_time
+        start_time,
+        plot_val="resistance"
         ):
     
     try:
         while True:
-            read_data = fdin.read().decode()
+            read_data = fdin.read()
             if len(read_data):
                 read_df = pandas.read_csv(StringIO(read_data), names=columns)
                 read_data_dict = separate_channels(read_df)
@@ -274,7 +300,7 @@ def live_plotter_loop(
                         lines[rchan] = plot_line(ax, data_dict, rchan, program_dict, start_time)
                         reset_legend(ax, anchor_tuple=anchor)
                     else:
-                        modify_data(data_dict, rchan, lines, program_dict, start_time)
+                        modify_data(data_dict, rchan, lines, program_dict, start_time, plot_val)
                 rescale_axis(ax, margins=margins)
             plt.pause(refresh_period)
             if not(plt.fignum_exists(fig.number)):
@@ -296,16 +322,25 @@ def live_plot_setup(
         start_time,
         box_width = 0.85,
         box_height = 1.00,
+        plot_val="resistance"
         ):
     fig, ax = plt.subplots()
     ax.xaxis.set_major_formatter(formatter)
     lines = {}
     for channel in channels:
-        lines[channel] = plot_line(ax, data_dict, channel, program_dict, start_time)
+        lines[channel] = plot_line(ax, data_dict, channel, program_dict, start_time, plot_val)
         
     ax.grid()
     ax.set_xlabel("Time elapsed [hh:mm:ss]")
-    ax.set_ylabel("Resistance [Ohms]")
+    
+    if plot_val.lower() == "resistance":
+        ax.set_ylabel("Resistance [Ohms]")
+    elif plot_val.lower() == "voltage":
+        ax.set_ylabel("Voltage [V]")
+    elif plot_val.lower() == "adc":
+        ax.set_ylabel("ADC [bit]")
+    else:
+        ax.set_ylabel("Voltage [V]")
     
     box = ax.get_position()
     ax.set_position([box.x0, box.y0, box.width * box_width, box.height * box_height])
