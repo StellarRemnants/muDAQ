@@ -4,13 +4,13 @@
 		"username": "stellarremnants"
   },
   "File Settings": {
-  	"file_path": "/home/stellarremnants/muDAQ/analysis_code/new_data/MDE__0001.csv",
+  	"file_path": "/home/stellarremnants/muDAQ_data/displacement_sensor_data/displacement_sensor_run__0001.csv",
     "skip_data_bulk": true,
 		"initial_read": 1000
   },
   "Plot Settings": {
 		"refresh_interval": 0.1,
-		"point_count_per_channel": 600,
+		"point_count_per_channel": 6000,
 		"field": "voltage",
 		"data_margins": [
 		  0,
