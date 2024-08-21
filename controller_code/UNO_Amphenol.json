@@ -1,0 +1,82 @@
+{
+  "program_name": "UNO Amphenol",
+  "delay_on_empty": 0.01,
+  "data_file_prefix": "../analysis_code/example_data/_ex_00_",
+  "device_list": [
+    {
+      "port": "/dev/ttyUSB0",
+      "device_name": "TEST UNO 1",
+      "baudrate": 230400,
+      "ignore_first_lines": 10,
+      "check_port_exists": false,
+      "collection_mode": "duration",
+      "collection_duration": 10,
+      "collection_count": null,
+      "delay_on_empty": 0.01,
+      "max_voltage": 5,
+      "bit_resolution": 10,
+      "channel_list": [
+        {
+          "channel_name": "TEMPLATE_01",
+          "pin_id": "A1",
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "00"
+        },
+        {
+          "channel_name": "TEMPLATE_02",
+          "pin_id": "A2",
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "00"
+        },
+        {
+          "channel_name": "TEMPLATE_03",
+          "pin_id": "A3",
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "00"
+        },
+        {
+          "channel_name": "TEMPLATE_04",
+          "pin_id": "A4",
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "00"
+        },
+        {
+          "channel_name": "TEMPLATE_05",
+          "pin_id": "A5",
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "00"
+        },
+        {
+          "channel_name": "TEMPLATE_06",
+          "pin_id": "A6",
+          "pin_delay": 500,
+          "sensor_type": "thermistor",
+          "thermistor_type": "amphenol",
+          "ref_resistance": 10000,
+          "ref_voltage": 3.3,
+	  "sensor_id": "00"
+        }
+      ]
+    }
+  ]
+}

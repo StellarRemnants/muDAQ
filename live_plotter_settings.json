@@ -10,7 +10,7 @@
   },
   "Plot Settings": {
 		"refresh_interval": 0.1,
-		"point_count_per_channel": 6000,
+		"point_count_per_channel": 600,
 		"field": "voltage",
 		"data_margins": [
 		  0,

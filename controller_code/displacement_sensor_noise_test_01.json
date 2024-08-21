@@ -1,0 +1,28 @@
+{
+  "program_name": "Displacement Sensor Noise Test",
+  "delay_on_empty": 0.01,
+  "data_file_prefix": "../../muDAQ_data/displacement_sensor_data/displacement_sensor_LSR_noise_run_",
+  "device_list": [
+    {
+      "port": "/dev/ttyUSB0",
+      "device_name": "Displ. Sens. ART. ATP.",
+      "baudrate": 230400,
+      "ignore_first_lines": 10,
+      "check_port_exists": false,
+      "collection_mode": "duration",
+      "collection_duration": 120,
+      "collection_count": null,
+      "delay_on_empty": 0.01,
+      "max_voltage": 2,
+      "bit_resolution": 14,
+      "channel_list": [
+        {
+          "channel_name": "Displacement Sensor",
+          "pin_id": "A29",
+          "pin_delay": 1e5,
+          "sensor_type": "displacement"
+        }
+      ]
+    }
+  ]
+}

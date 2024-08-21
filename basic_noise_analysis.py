@@ -120,7 +120,9 @@ if __name__ == "__main__":
     
     data_directory = "/home/stellarremnants/muDAQ_data/displacement_sensor_data/"
     
-    data_filename = "displacement_sensor_noise_run__0000.csv"
+    data_filename = "displacement_sensor_noise_run__0007.csv"
+    
+    # data_filename = "displacement_sensor_LSR_noise_run__0000.csv"
     
     data_path = os.path.join(data_directory, data_filename)
     
@@ -141,6 +143,9 @@ if __name__ == "__main__":
     fft_arr = np.real(np.fft.rfft(volt_arr-np.mean(volt_arr)))
     fft_freq = np.fft.rfftfreq(len(volt_arr), np.mean(np.diff(time_arr)))
     
-    fig, ax = plt.subplots()
-    # ax.plot(fft_freq, fft_arr**2)
-    ax.plot(time_arr, volt_arr)
+    fig, axes = plt.subplots(ncols=2)
+    fig.set_size_inches(np.asarray([1800, 800])/fig.dpi)
+    ax = axes[0]
+    ax2 = axes[1]
+    ax.plot(fft_freq, fft_arr**2)
+    ax2.plot(time_arr, volt_arr)
